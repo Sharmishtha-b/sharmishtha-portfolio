@@ -289,10 +289,10 @@ export default function App() {
   const navLinks = ["about","experience","projects","skills","certifications","beyond","contact"];
 
   const projects = [
-    {name:"Parkinsons Detection",desc:"Hybrid CNN-DNN model combining image and tabular data to improve diagnostic accuracy.",back:"The interesting part was integrating two completely different data types — visual MRI scans and clinical features — into one model. Not a standard setup.",tags:["Python","CNN","DNN","ML"],icon:"🧠"},
-    {name:"Customer Churn Prediction",desc:"Classification models to identify high-risk customers and support retention strategies.",back:"Spent more time on feature selection and business interpretation than on the model itself. That is usually where the real work is.",tags:["Python","XGBoost","Sklearn"],icon:"📉"},
-    {name:"Drug Prescription Analysis",desc:"NLP pipeline extracting insights from consumer reviews using NLTK for decision support.",back:"Messy real-world text data. Cleaning it and finding meaningful patterns across thousands of reviews was the actual challenge.",tags:["Python","NLP","NLTK"],icon:"💊"},
-    {name:"Diabetes Prediction",desc:"Comparative analysis of ML models with feature engineering and optimization.",back:"Ran six classifiers side by side. The point was not which model won — it was understanding why, and what the features were actually capturing.",tags:["Python","ML","Feature Engineering"],icon:"🔬"},
+    {name:"Parkinsons Detection",desc:"Hybrid CNN-DNN model combining image and tabular data to improve diagnostic accuracy.",back:"The interesting part was integrating two completely different data types — visual MRI scans and clinical features — into one model. Not a standard setup.",tags:["Python","CNN","DNN","ML"],icon:"🧠",github:null},
+    {name:"Customer Churn Prediction",desc:"Classification models to identify high-risk customers and support retention strategies.",back:"Spent more time on feature selection and business interpretation than on the model itself. That is usually where the real work is.",tags:["Python","XGBoost","Sklearn"],icon:"📉",github:"https://github.com/Sharmishtha-b/Customer-Churn-Prediction---Project"},
+    {name:"Drug Prescription Analysis",desc:"NLP pipeline extracting insights from consumer reviews using NLTK for decision support.",back:"Messy real-world text data. Cleaning it and finding meaningful patterns across thousands of reviews was the actual challenge.",tags:["Python","NLP","NLTK"],icon:"💊",github:"https://github.com/Sharmishtha-b/Drug-Prescription-based-on-Consumer-Reviews"},
+    {name:"Diabetes Prediction",desc:"Comparative analysis of ML models with feature engineering and optimization.",back:"Ran six classifiers side by side. The point was not which model won — it was understanding why, and what the features were actually capturing.",tags:["Python","ML","Feature Engineering"],icon:"🔬",github:"https://github.com/Sharmishtha-b/Diabetes-Prediction"},
   ];
 
   const cardBase = "rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-white/[0.02]";
@@ -392,14 +392,14 @@ export default function App() {
             <div>
               <h2 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">a little about me</h2>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">I am a data engineer and analyst at PwC AC India — which in practice means figuring out why something broke, building something that hopefully does not, and making sure the insights actually land with the people who need them.</p>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed mt-4">Heading to NUS Singapore this fall for an MSBA. I wanted to understand the business side of data, not just the technical side — and Singapore made more sense to me geographically and culturally than other options.</p>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed mt-4">At NUS Singapore for an MSBA. I wanted to understand the business side of data, not just the technical side — and Singapore made more sense to me geographically and culturally than other options.</p>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed mt-4">9.58 CGPA from SRM Chennai. McKinsey Forward alumni. Amazon ML Summer School 2023. And yes, click the star below for the less CV version of that.</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
                 {label:"current role",value:"Associate @ PwC",icon:"💼"},
                 {label:"location",value:"Bangalore, India",icon:"📍"},
-                {label:"next chapter",value:"NUS Singapore",icon:"🎓"},
+                {label:"currently at",value:"NUS Singapore",icon:"🎓"},
                 {label:"cgpa",value:"9.58 / 10",icon:"⭐",secret:true},
               ].map((item)=>(
                 <HoloCard key={item.label} className={"p-4 "+(item.secret?"cursor-none ":"")+"bg-white dark:bg-white/[0.02]"} onClick={()=>item.secret&&setShowEaster2(true)}>
@@ -465,7 +465,14 @@ export default function App() {
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{project.desc}</p>
                       </div>
-                      <div className="flex flex-wrap gap-2 mt-3">{project.tags.map(tag=>(<span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">{tag}</span>))}</div>
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="flex flex-wrap gap-2">{project.tags.map(tag=>(<span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">{tag}</span>))}</div>
+                        {project.github && (
+                          <a href={project.github} target="_blank" rel="noopener noreferrer" onClick={(e)=>e.stopPropagation()} className="text-xs px-2 py-1 rounded-full border border-gray-300 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-violet-600 hover:border-violet-400 dark:hover:text-violet-300 transition-colors flex items-center gap-1 flex-shrink-0" style={{cursor:'pointer'}}>
+                            code ↗
+                          </a>
+                        )}
+                      </div>
                     </HoloCard>
                   </div>
                   <div style={{backfaceVisibility:'hidden',transform:'rotateY(180deg)',position:'absolute',inset:0}} className="p-6 rounded-2xl border border-violet-500/30 bg-violet-50 dark:bg-violet-950/40 flex flex-col justify-center">
