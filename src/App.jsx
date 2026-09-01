@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 
-const ROLES = ["Data Engineer", "Analytics Engineer", "ML Enthusiast", "NUS MSBA 2026", "Problem Solver"];
+const ROLES = ["Data Analyst", "Business Analyst", "Analytics Engineer", "NUS MSBA 2026", "Problem Solver"];
 const HOLO = "linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 40%, #4facfe 60%, #a18cd1 80%, #667eea 100%)";
 const HOLO_ANIM = { backgroundImage: HOLO, backgroundSize: "200% auto", WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent", animation: "holoShift 4s linear infinite" };
 
@@ -78,16 +78,16 @@ function LiveWidget({ onClockClick }) {
   useEffect(() => {
     function tick() {
       const now = new Date();
-      const ist = new Date(now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
-      setTime(ist.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}));
-      setDate(ist.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}));
+      const sg = new Date(now.toLocaleString('en-US',{timeZone:'Asia/Singapore'}));
+      setTime(sg.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}));
+      setDate(sg.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}));
     }
     tick(); const i=setInterval(tick,1000); return ()=>clearInterval(i);
   },[]);
   return (
     <div className="flex flex-col gap-2 mt-6">
       <div onClick={onClockClick} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-white/5 text-xs cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/30 transition-all group">
-        <span>🕐</span><span className="text-gray-400 group-hover:text-violet-400 transition-colors">Bangalore</span><span className="text-gray-900 dark:text-white font-mono ml-auto">{time}</span>
+        <span>🕐</span><span className="text-gray-400 group-hover:text-violet-400 transition-colors">Singapore</span><span className="text-gray-900 dark:text-white font-mono ml-auto">{time}</span>
       </div>
       <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-white/5 text-xs">
         <span>📅</span><span className="text-gray-400">Today</span><span className="text-gray-900 dark:text-white font-mono ml-auto">{date}</span>
@@ -101,7 +101,8 @@ function CommandPalette({ onClose }) {
   const items = [
     {label:'About me',icon:'👋',href:'#about'},
     {label:'Work experience',icon:'🏢',href:'#experience'},
-    {label:'Projects',icon:'🔬',href:'#projects'},
+    {label:'Undergrad projects',icon:'🔬',href:'#projects'},
+    {label:'Independent projects',icon:'🚀',href:'#independent'},
     {label:'Skills',icon:'⚡',href:'#skills'},
     {label:'Certifications',icon:'🏆',href:'#certifications'},
     {label:'Beyond data',icon:'✨',href:'#beyond'},
@@ -109,7 +110,6 @@ function CommandPalette({ onClose }) {
     {label:'Email me',icon:'✉️',href:'mailto:sharmishthabhar@gmail.com'},
     {label:'LinkedIn',icon:'💼',href:'https://linkedin.com/in/sharmishtha-bharti-8ab54b209'},
     {label:'GitHub',icon:'🐙',href:'https://github.com/Sharmishtha-b'},
-    {label:'Neo Pearl Pins',icon:'📌',href:'https://pinterest.com/neopearlpins'},
   ];
   const filtered = items.filter(i=>i.label.toLowerCase().includes(query.toLowerCase()));
   useEffect(() => {
@@ -144,8 +144,8 @@ function CommandPalette({ onClose }) {
 
 function TimezoneModal({ onClose }) {
   const zones = [
-    {city:'Bangalore',tz:'Asia/Kolkata',flag:'🇮🇳'},
     {city:'Singapore',tz:'Asia/Singapore',flag:'🇸🇬'},
+    {city:'Bangalore',tz:'Asia/Kolkata',flag:'🇮🇳'},
     {city:'London',tz:'Europe/London',flag:'🇬🇧'},
     {city:'New York',tz:'America/New_York',flag:'🇺🇸'},
     {city:'Tokyo',tz:'Asia/Tokyo',flag:'🇯🇵'},
@@ -159,14 +159,14 @@ function TimezoneModal({ onClose }) {
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[500] flex items-center justify-center bg-black/60 backdrop-blur-md" onClick={onClose}>
       <motion.div initial={{scale:0.9,y:20}} animate={{scale:1,y:0}} exit={{scale:0.9}} className="bg-white dark:bg-[#0e0e18] border border-gray-200 dark:border-white/10 rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl" onClick={e=>e.stopPropagation()}>
         <h3 className="font-bold text-gray-900 dark:text-white mb-1">world clock</h3>
-        <p className="text-xs text-gray-400 mb-6">currently in bangalore. next stop singapore.</p>
+        <p className="text-xs text-gray-400 mb-6">currently in singapore. bangalore is home base.</p>
         <div className="space-y-3">
           {zones.map(z=>(
-            <div key={z.city} className={"flex items-center justify-between p-3 rounded-xl "+(z.city==='Bangalore'||z.city==='Singapore'?"bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20":"bg-gray-50 dark:bg-white/5")}>
+            <div key={z.city} className={"flex items-center justify-between p-3 rounded-xl "+(z.city==='Singapore'?"bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20":"bg-gray-50 dark:bg-white/5")}>
               <div className="flex items-center gap-2">
                 <span>{z.flag}</span>
                 <span className="text-sm text-gray-700 dark:text-gray-300">{z.city}</span>
-                {z.city==='Singapore'&&<span className="text-xs text-violet-500 bg-violet-100 dark:bg-violet-500/20 px-2 py-0.5 rounded-full">soon</span>}
+                {z.city==='Bangalore'&&<span className="text-xs text-gray-400 bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-full">home</span>}
               </div>
               <span className="text-sm font-mono text-gray-900 dark:text-white">{times[z.city]||'--:--'}</span>
             </div>
@@ -255,7 +255,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const sections = ["about","experience","projects","skills","certifications","beyond","contact"];
+    const sections = ["about","experience","projects","independent","skills","certifications","beyond","contact"];
     const observers = sections.map((id) => {
       const el = document.getElementById(id); if (!el) return null;
       const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setActiveSection(id); }, { threshold: 0.3 });
@@ -286,13 +286,20 @@ export default function App() {
 
   const handleLogoClick = () => { const n=logoClicks+1; setLogoClicks(n); if(n>=5){setShowEaster1(true);setLogoClicks(0);} };
   const toggleFlip = (i) => setFlipped(f=>({...f,[i]:!f[i]}));
-  const navLinks = ["about","experience","projects","skills","certifications","beyond","contact"];
+  const navLinks = ["about","experience","projects","independent","skills","certifications","beyond","contact"];
 
-  const projects = [
+  const undergradProjects = [
     {name:"Parkinsons Detection",desc:"Hybrid CNN-DNN model combining image and tabular data to improve diagnostic accuracy.",back:"The interesting part was integrating two completely different data types — visual MRI scans and clinical features — into one model. Not a standard setup.",tags:["Python","CNN","DNN","ML"],icon:"🧠",github:null},
     {name:"Customer Churn Prediction",desc:"Classification models to identify high-risk customers and support retention strategies.",back:"Spent more time on feature selection and business interpretation than on the model itself. That is usually where the real work is.",tags:["Python","XGBoost","Sklearn"],icon:"📉",github:"https://github.com/Sharmishtha-b/Customer-Churn-Prediction---Project"},
     {name:"Drug Prescription Analysis",desc:"NLP pipeline extracting insights from consumer reviews using NLTK for decision support.",back:"Messy real-world text data. Cleaning it and finding meaningful patterns across thousands of reviews was the actual challenge.",tags:["Python","NLP","NLTK"],icon:"💊",github:"https://github.com/Sharmishtha-b/Drug-Prescription-based-on-Consumer-Reviews"},
     {name:"Diabetes Prediction",desc:"Comparative analysis of ML models with feature engineering and optimization.",back:"Ran six classifiers side by side. The point was not which model won — it was understanding why, and what the features were actually capturing.",tags:["Python","ML","Feature Engineering"],icon:"🔬",github:"https://github.com/Sharmishtha-b/Diabetes-Prediction"},
+  ];
+
+  const funTrack = [
+    {name:"first fun build — incoming",desc:"A low-stakes, vibe-coded weekend project. The idea is more important than the tech stack for this track.",icon:"✨"},
+  ];
+  const seriousTrack = [
+    {name:"first agentic build — incoming",desc:"Something end-to-end: agents, n8n/Kafka-style pipelines, built to actually solve a problem, not just demo one.",icon:"⚙️"},
   ];
 
   const cardBase = "rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-white/[0.02]";
@@ -391,15 +398,15 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h2 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">a little about me</h2>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">I am a data engineer and analyst at PwC AC India — which in practice means figuring out why something broke, building something that hopefully does not, and making sure the insights actually land with the people who need them.</p>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed mt-4">At NUS Singapore for an MSBA. I wanted to understand the business side of data, not just the technical side — and Singapore made more sense to me geographically and culturally than other options.</p>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">I'm currently doing an MSBA at NUS Singapore, specifically to get better at the business half of the data equation — the technical side I already trust myself with, it was the "so what does this actually mean for the business" part I wanted formal training in.</p>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed mt-4">Before this, I spent about two years as a data &amp; business analyst at PwC AC India — turning messy business problems into data models, then making sure the resulting insight actually landed with the people who had to act on it.</p>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed mt-4">9.58 CGPA from SRM Chennai. McKinsey Forward alumni. Amazon ML Summer School 2023. And yes, click the star below for the less CV version of that.</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                {label:"current role",value:"Associate @ PwC",icon:"💼"},
-                {label:"location",value:"Bangalore, India",icon:"📍"},
-                {label:"currently at",value:"NUS Singapore",icon:"🎓"},
+                {label:"current status",value:"MSBA Candidate, NUS",icon:"🎓"},
+                {label:"based in",value:"Singapore",icon:"📍"},
+                {label:"prior role",value:"Associate @ PwC ('24–'26)",icon:"💼"},
                 {label:"cgpa",value:"9.58 / 10",icon:"⭐",secret:true},
               ].map((item)=>(
                 <HoloCard key={item.label} className={"p-4 "+(item.secret?"cursor-none ":"")+"bg-white dark:bg-white/[0.02]"} onClick={()=>item.secret&&setShowEaster2(true)}>
@@ -417,7 +424,7 @@ export default function App() {
           <h2 className="text-4xl font-bold mb-10 text-gray-900 dark:text-white">where I have been</h2>
           <div className="space-y-6">
             {[
-              {role:"Associate - Data and Analytics",company:"PwC AC India",period:"Aug 2024 - Present",location:"Bangalore",icon:"🏢",points:[
+              {role:"Associate - Data and Analytics",company:"PwC AC India",period:"Aug 2024 - Jun 2026",location:"Bangalore",icon:"🏢",points:[
                 "Work with global clients to translate business problems into analytics solutions",
                 "Build and maintain data models in DBT and Snowflake for enterprise reporting",
                 "Design ETL workflows using Informatica IICS for cloud data integration",
@@ -449,11 +456,11 @@ export default function App() {
         </motion.section>
 
         <motion.section id="projects" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />03 projects</p>
-          <h2 className="text-4xl font-bold mb-2 text-gray-900 dark:text-white">things I have built</h2>
-          <p className="text-gray-400 text-sm mb-10">click a card to flip it — the back is the part that does not make it into the abstract</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />03 undergrad projects</p>
+          <h2 className="text-4xl font-bold mb-2 text-gray-900 dark:text-white">the undergrad archive</h2>
+          <p className="text-gray-400 text-sm mb-10">college-era ML work — kept for the record. click a card to flip it, the back is the part that does not make it into the abstract</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {projects.map((project,i)=>(
+            {undergradProjects.map((project,i)=>(
               <div key={i} className="h-56" style={{perspective:'1000px',cursor:'none'}} onClick={()=>toggleFlip(i)}>
                 <motion.div animate={{rotateY:flipped[i]?180:0}} transition={{duration:0.5,type:"spring"}} style={{transformStyle:'preserve-3d',position:'relative',width:'100%',height:'100%'}}>
                   <div style={{backfaceVisibility:'hidden',position:'absolute',inset:0}}>
@@ -486,8 +493,46 @@ export default function App() {
           </div>
         </motion.section>
 
+        <motion.section id="independent" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />04 independent projects</p>
+          <h2 className="text-4xl font-bold mb-2 text-gray-900 dark:text-white">the ones nobody assigned me</h2>
+          <p className="text-gray-400 text-sm mb-10 max-w-xl">building on two tracks during the MSBA — one for the fun of it, one to actually solve something end to end. this section fills in as I ship.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p className="text-xs tracking-widest uppercase mb-1 font-medium text-pink-500">for fun</p>
+              <p className="text-gray-400 text-xs mb-4">side quests, vibe-coded weekends, ideas that would not leave me alone</p>
+              <div className="space-y-4">
+                {funTrack.map((p,i)=>(
+                  <HoloCard key={i} className="p-6 border-dashed bg-white dark:bg-white/[0.02]">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2"><span className="text-xl">{p.icon}</span><h3 className="font-semibold text-gray-900 dark:text-white">{p.name}</h3></div>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-500 border border-pink-500/20 flex-shrink-0">brewing</span>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{p.desc}</p>
+                  </HoloCard>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs tracking-widest uppercase mb-1 font-medium text-cyan-500">for real</p>
+              <p className="text-gray-400 text-xs mb-4">agentic workflows, n8n / Kafka-style pipelines, built to solve an actual problem</p>
+              <div className="space-y-4">
+                {seriousTrack.map((p,i)=>(
+                  <HoloCard key={i} className="p-6 border-dashed bg-white dark:bg-white/[0.02]">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2"><span className="text-xl">{p.icon}</span><h3 className="font-semibold text-gray-900 dark:text-white">{p.name}</h3></div>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 flex-shrink-0">brewing</span>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{p.desc}</p>
+                  </HoloCard>
+                ))}
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
         <motion.section id="skills" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />04 skills</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />05 skills</p>
           <h2 className="text-4xl font-bold mb-10 text-gray-900 dark:text-white">what I work with</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
@@ -505,7 +550,7 @@ export default function App() {
         </motion.section>
 
         <motion.section id="certifications" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />05 certifications and awards</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />06 certifications and awards</p>
           <h2 className="text-4xl font-bold mb-10 text-gray-900 dark:text-white">credentials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
@@ -527,12 +572,11 @@ export default function App() {
         </motion.section>
 
         <motion.section id="beyond" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />06 beyond data</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />07 beyond data</p>
           <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">not just a data person</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-10 max-w-lg leading-relaxed">I claim to be a very boring person. the evidence suggests otherwise.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              {href:"https://pinterest.com/neopearlpins",icon:"📌",title:"Neo Pearl Pins",sub:"@neopearlpins",desc:"Digital lifestyle and aesthetic content. Started it because I spend too much time on Pinterest anyway.",link:"visit",color:"hover:border-pink-300 dark:hover:border-pink-500/30"},
               {icon:"🎬",title:"movies and shows",desc:"I watch a lot. I have opinions. Do not ask me to pick a favourite because I will overthink it.",color:"hover:border-orange-300 dark:hover:border-orange-500/20"},
               {icon:"🍳",title:"cooking and food",desc:"I cook when I need to think. Also very excited about hawker food — genuinely part of the appeal of Singapore.",color:"hover:border-yellow-300 dark:hover:border-yellow-500/20"},
               {icon:"✈️",title:"travel",desc:"Love it, do not do it enough. Working on that.",color:"hover:border-blue-300 dark:hover:border-blue-500/20"},
@@ -557,7 +601,7 @@ export default function App() {
         </motion.section>
 
         <motion.section id="contact" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-20">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />07 contact</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />08 contact</p>
           <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">lets talk</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-10 max-w-md leading-relaxed">a role, a collab, a show recommendation, or just talking data — reach out.</p>
           <div className="flex flex-wrap gap-4">
