@@ -65,7 +65,7 @@ function SpaceCanvas() {
       <canvas ref={canvasRef} className="w-full rounded-2xl" style={{maxHeight:320}} />
       <div className="flex gap-2 mt-2 justify-end">
         <button onClick={()=>{stateRef.current.lines=[];stateRef.current.selected=null;}} className="text-xs px-3 py-1 rounded-full border border-violet-500/20 text-violet-400 hover:bg-violet-500/10 transition-all">clear</button>
-        <button onClick={()=>{stateRef.current.lines=[];stateRef.current.selected=null;}} className="text-xs px-3 py-1 rounded-full border border-violet-500/20 text-violet-400 hover:bg-violet-500/10 transition-all">shuffle</button>
+        <button onClick={()=>{stateRef.current.nodes=makeNodes();stateRef.current.lines=[];stateRef.current.selected=null;}} className="text-xs px-3 py-1 rounded-full border border-violet-500/20 text-violet-400 hover:bg-violet-500/10 transition-all">shuffle</button>
       </div>
       <p className="text-xs text-gray-500 mt-1 text-right">click nodes to connect them</p>
     </div>
@@ -187,13 +187,10 @@ function HoloCard({ className, children, onClick }) {
       onClick={onClick}
       className={"rounded-2xl border transition-all duration-300 relative overflow-hidden " + className}
       style={{
-        borderColor: hovered ? 'transparent' : undefined,
+        borderColor: hovered ? 'rgba(139,92,246,0.4)' : undefined,
         background: hovered ? 'rgba(255,255,255,0.03)' : undefined,
       }}
     >
-      {hovered && (
-        <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{padding:'1px',background:HOLO,backgroundSize:'200% auto',animation:'holoShift 3s linear infinite',WebkitMask:'linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0)',WebkitMaskComposite:'xor',maskComposite:'exclude'}} />
-      )}
       {children}
     </motion.div>
   );
@@ -212,8 +209,6 @@ export default function App() {
   const [flipped, setFlipped] = useState({});
   const [typedKeys, setTypedKeys] = useState('');
   const [hoveredNav, setHoveredNav] = useState(null);
-  const cursorDotRef = useRef(null);
-  const cursorRingRef = useRef(null);
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
   const typedText = useTypewriter(ROLES);
@@ -221,7 +216,6 @@ export default function App() {
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
-      * { cursor: none !important; }
       @keyframes holoShift { 0%{background-position:0% center} 100%{background-position:200% center} }
     `;
     document.head.appendChild(style);
@@ -232,27 +226,6 @@ export default function App() {
     if (dark) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   }, [dark]);
-
-  useEffect(() => {
-    const dot = cursorDotRef.current;
-    const ring = cursorRingRef.current;
-    if (!dot || !ring) return;
-    let rx = -100, ry = -100;
-    function onMove(e) {
-      const x = e.clientX, y = e.clientY;
-      dot.style.left = x - 4 + 'px';
-      dot.style.top = y - 4 + 'px';
-      rx += (x - 16 - rx) * 0.18;
-      ry += (y - 16 - ry) * 0.18;
-      ring.style.left = rx + 'px';
-      ring.style.top = ry + 'px';
-    }
-    let raf;
-    function loop() { raf = requestAnimationFrame(loop); }
-    loop();
-    window.addEventListener('mousemove', onMove);
-    return () => { window.removeEventListener('mousemove', onMove); cancelAnimationFrame(raf); };
-  }, []);
 
   useEffect(() => {
     const sections = ["about","experience","projects","independent","skills","certifications","beyond","contact"];
@@ -296,19 +269,16 @@ export default function App() {
   ];
 
   const funTrack = [
-    {name:"first fun build — incoming",desc:"A low-stakes, vibe-coded weekend project. The idea is more important than the tech stack for this track.",icon:"✨"},
+    {name:"n8n automation — in progress",desc:"First build in this track: a small n8n workflow automating an actual daily annoyance. Low-stakes on purpose — the idea matters more than the stack here.",icon:"✨"},
   ];
   const seriousTrack = [
-    {name:"first agentic build — incoming",desc:"Something end-to-end: agents, n8n/Kafka-style pipelines, built to actually solve a problem, not just demo one.",icon:"⚙️"},
+    {name:"first agentic build — queued next",desc:"An agent framework project scoped around one real workflow, sized like the kind of problem I'd actually be handed at work. n8n/Kafka-style pipeline work follows after.",icon:"⚙️"},
   ];
 
   const cardBase = "rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-white/[0.02]";
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#08080f] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-500 overflow-x-hidden">
-
-      <div ref={cursorDotRef} className="fixed pointer-events-none z-[999]" style={{width:8,height:8,borderRadius:'50%',background:'#a78bfa',position:'fixed',top:-100,left:-100}} />
-      <div ref={cursorRingRef} className="fixed pointer-events-none z-[998]" style={{width:32,height:32,borderRadius:'50%',border:'1px solid rgba(167,139,250,0.45)',position:'fixed',top:-100,left:-100}} />
 
       <motion.div className="fixed top-0 left-0 right-0 h-[2px] origin-left z-[200]" style={{scaleX,backgroundImage:HOLO,backgroundSize:'200% auto',animation:'holoShift 3s linear infinite'}} />
       <Particles />
@@ -355,7 +325,7 @@ export default function App() {
               onMouseEnter={()=>setHoveredNav(link)}
               onMouseLeave={()=>setHoveredNav(null)}
               className="transition-all relative text-sm"
-              style={(hoveredNav===link||activeSection===link) ? {...HOLO_ANIM,fontWeight:500} : {color:'rgb(107,114,128)'}}>
+              style={(hoveredNav===link||activeSection===link) ? {color:'#8b5cf6',fontWeight:500} : {color:'rgb(107,114,128)'}}>
               {link}
             </a>
           ))}
@@ -369,7 +339,7 @@ export default function App() {
         <motion.section initial={{opacity:0,y:40}} animate={{opacity:1,y:0}} transition={{duration:0.9}} className="mb-32 min-h-[90vh] grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div>
             <motion.div initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} transition={{delay:0.2}} className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-500 text-xs font-medium mb-8 w-fit">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" onClick={()=>setShowEaster2(true)} style={{cursor:'none'}} />
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse cursor-pointer" onClick={()=>setShowEaster2(true)} />
               open to opportunities
             </motion.div>
             <h1 className="text-7xl font-bold tracking-tight mb-2 leading-none">
@@ -377,7 +347,7 @@ export default function App() {
               <span className="block" style={HOLO_ANIM}>Bharti.</span>
             </h1>
             <div className="flex items-center gap-2 mt-6 mb-6 h-10">
-              <span className="text-xl font-medium" style={HOLO_ANIM}>{typedText}</span>
+              <span className="text-xl font-medium text-violet-500 dark:text-violet-400">{typedText}</span>
               <span className="w-0.5 h-7 bg-violet-500 animate-pulse" />
             </div>
             <p className="text-lg text-gray-500 dark:text-gray-400 max-w-lg leading-relaxed">
@@ -394,7 +364,7 @@ export default function App() {
         </motion.section>
 
         <motion.section id="about" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />01 about</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />01 about</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h2 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">a little about me</h2>
@@ -409,7 +379,7 @@ export default function App() {
                 {label:"prior role",value:"Associate @ PwC ('24–'26)",icon:"💼"},
                 {label:"cgpa",value:"9.58 / 10",icon:"⭐",secret:true},
               ].map((item)=>(
-                <HoloCard key={item.label} className={"p-4 "+(item.secret?"cursor-none ":"")+"bg-white dark:bg-white/[0.02]"} onClick={()=>item.secret&&setShowEaster2(true)}>
+                <HoloCard key={item.label} className={"p-4 "+(item.secret?"cursor-pointer ":"")+"bg-white dark:bg-white/[0.02]"} onClick={()=>item.secret&&setShowEaster2(true)}>
                   <div className="text-xl mb-2">{item.icon}</div>
                   <p className="text-xs text-gray-400 mb-1">{item.label}</p>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">{item.value}</p>
@@ -420,23 +390,23 @@ export default function App() {
         </motion.section>
 
         <motion.section id="experience" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />02 experience</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />02 experience</p>
           <h2 className="text-4xl font-bold mb-10 text-gray-900 dark:text-white">where I have been</h2>
           <div className="space-y-6">
             {[
               {role:"Associate - Data and Analytics",company:"PwC AC India",period:"Aug 2024 - Jun 2026",location:"Bangalore",icon:"🏢",points:[
-                "Work with global clients to translate business problems into analytics solutions",
-                "Build and maintain data models in DBT and Snowflake for enterprise reporting",
-                "Design ETL workflows using Informatica IICS for cloud data integration",
-                "Contributed to a Teradata to Snowflake migration initiative",
-                "Develop automated Power BI dashboards using SQL",
-                "Supporting a broader shift to Databricks as part of cloud modernisation",
-                "Present findings and recommendations to senior stakeholders",
+                "Modeled and transformed source data in DBT on Snowflake, pulling data in through AWS Glue, to migrate a client off a 30-year-old legacy platform from kickoff through handover",
+                "Built IICS pipelines during a source system migration, then ran QA testing and root-cause analysis on migrated pipelines — fixing pipeline logic behind client-flagged discrepancies and tracing issues back to source-data problems",
+                "Converted IBM DataStage jobs and JCL scripts into SQL-based Databricks jobs for a Teradata-to-Databricks migration, validating job sequencing and troubleshooting failures to confirm each conversion ran correctly",
+                "Developed automated Power BI dashboards backed by SQL to replace manual reporting, reconciling against legacy reports to validate accuracy ahead of go-live",
+                "Partnered with global clients to translate ambiguous business problems into structured, scoped analytics solutions",
+                "Presented analytical insights and recommendations to senior stakeholders to support data-driven decisions",
+                "Mentored interns — assigning tasks and walking new hires through pipeline and project workflows",
               ]},
               {role:"Intern - Data and Analytics",company:"PwC AC India",period:"Apr 2024 - Aug 2024",location:"Bangalore",icon:"🚀",points:[
-                "Built sales forecasting models using ARIMA, Holt-Winters, Random Forest and XGBoost",
-                "Evaluated and compared model performance across multiple approaches",
-                "Translated forecasting outputs into business recommendations",
+                "Benchmarked statistical (ARIMA, Holt-Winters) against ML (Random Forest, XGBoost) forecasting models at the SKU level for a major homebuilding client — statistical approaches won out",
+                "Applied those findings across four product categories (taps, doors, handles, bathtubs) to guide SKU-level inventory recommendations",
+                "Documented and organized engagement outputs into clean, stakeholder-ready deliverables",
               ]},
             ].map((job,i)=>(
               <HoloCard key={i} className="p-6 bg-white dark:bg-white/[0.02]">
@@ -456,12 +426,12 @@ export default function App() {
         </motion.section>
 
         <motion.section id="projects" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />03 undergrad projects</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />03 undergrad projects</p>
           <h2 className="text-4xl font-bold mb-2 text-gray-900 dark:text-white">the undergrad archive</h2>
           <p className="text-gray-400 text-sm mb-10">college-era ML work — kept for the record. click a card to flip it, the back is the part that does not make it into the abstract</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {undergradProjects.map((project,i)=>(
-              <div key={i} className="h-56" style={{perspective:'1000px',cursor:'none'}} onClick={()=>toggleFlip(i)}>
+              <div key={i} className="h-56 cursor-pointer" style={{perspective:'1000px'}} onClick={()=>toggleFlip(i)}>
                 <motion.div animate={{rotateY:flipped[i]?180:0}} transition={{duration:0.5,type:"spring"}} style={{transformStyle:'preserve-3d',position:'relative',width:'100%',height:'100%'}}>
                   <div style={{backfaceVisibility:'hidden',position:'absolute',inset:0}}>
                     <HoloCard className={"p-6 h-full flex flex-col justify-between bg-white dark:bg-white/[0.02]"}>
@@ -494,7 +464,7 @@ export default function App() {
         </motion.section>
 
         <motion.section id="independent" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />04 independent projects</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />04 independent projects</p>
           <h2 className="text-4xl font-bold mb-2 text-gray-900 dark:text-white">the ones nobody assigned me</h2>
           <p className="text-gray-400 text-sm mb-10 max-w-xl">building on two tracks during the MSBA — one for the fun of it, one to actually solve something end to end. this section fills in as I ship.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -506,7 +476,7 @@ export default function App() {
                   <HoloCard key={i} className="p-6 border-dashed bg-white dark:bg-white/[0.02]">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2"><span className="text-xl">{p.icon}</span><h3 className="font-semibold text-gray-900 dark:text-white">{p.name}</h3></div>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-500 border border-pink-500/20 flex-shrink-0">brewing</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-500 border border-pink-500/20 flex-shrink-0">in progress</span>
                     </div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{p.desc}</p>
                   </HoloCard>
@@ -521,7 +491,7 @@ export default function App() {
                   <HoloCard key={i} className="p-6 border-dashed bg-white dark:bg-white/[0.02]">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2"><span className="text-xl">{p.icon}</span><h3 className="font-semibold text-gray-900 dark:text-white">{p.name}</h3></div>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 flex-shrink-0">brewing</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 flex-shrink-0">queued</span>
                     </div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{p.desc}</p>
                   </HoloCard>
@@ -532,7 +502,7 @@ export default function App() {
         </motion.section>
 
         <motion.section id="skills" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />05 skills</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />05 skills</p>
           <h2 className="text-4xl font-bold mb-10 text-gray-900 dark:text-white">what I work with</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
@@ -542,15 +512,15 @@ export default function App() {
               {category:"Tools and Viz",items:["Power BI","Tableau","Excel","Git","VS Code","Streamlit","FastAPI"],color:"from-cyan-500/10 to-violet-500/10"},
             ].map((group)=>(
               <HoloCard key={group.category} className={"p-6 bg-gradient-to-br "+group.color}>
-                <p className="text-xs tracking-widest uppercase mb-4 font-medium" style={HOLO_ANIM}>{group.category}</p>
-                <div className="flex flex-wrap gap-2">{group.items.map(item=>(<motion.span key={item} whileHover={{scale:1.08}} className="text-sm px-3 py-1.5 rounded-full bg-white/70 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-300 transition-all border border-gray-200/50 dark:border-white/5" style={{cursor:'none'}}>{item}</motion.span>))}</div>
+                <p className="text-xs tracking-widest uppercase mb-4 font-medium text-violet-500 dark:text-violet-400">{group.category}</p>
+                <div className="flex flex-wrap gap-2">{group.items.map(item=>(<motion.span key={item} whileHover={{scale:1.08}} className="text-sm px-3 py-1.5 rounded-full bg-white/70 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-300 transition-all border border-gray-200/50 dark:border-white/5">{item}</motion.span>))}</div>
               </HoloCard>
             ))}
           </div>
         </motion.section>
 
         <motion.section id="certifications" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />06 certifications and awards</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />06 certifications and awards</p>
           <h2 className="text-4xl font-bold mb-10 text-gray-900 dark:text-white">credentials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
@@ -572,7 +542,7 @@ export default function App() {
         </motion.section>
 
         <motion.section id="beyond" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />07 beyond data</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />07 beyond data</p>
           <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">not just a data person</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-10 max-w-lg leading-relaxed">I claim to be a very boring person. the evidence suggests otherwise.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -601,7 +571,7 @@ export default function App() {
         </motion.section>
 
         <motion.section id="contact" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-20">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2" style={HOLO_ANIM}><span className="w-8 h-px inline-block" style={{background:HOLO}} />08 contact</p>
+          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />08 contact</p>
           <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">lets talk</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-10 max-w-md leading-relaxed">a role, a collab, a show recommendation, or just talking data — reach out.</p>
           <div className="flex flex-wrap gap-4">
