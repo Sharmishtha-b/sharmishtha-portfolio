@@ -1,601 +1,466 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { motion, AnimatePresence, MotionConfig, useScroll, useSpring } from "framer-motion";
+import { links, tools, projects, sideQuests, experience, credentials, hobbies, hobbiesAlso } from "./data";
 
-const ROLES = ["Data Analyst", "Business Analyst", "Analytics Engineer", "NUS MSBA 2026", "Problem Solver"];
-const HOLO = "linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 40%, #4facfe 60%, #a18cd1 80%, #667eea 100%)";
-const HOLO_ANIM = { backgroundImage: HOLO, backgroundSize: "200% auto", WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent", animation: "holoShift 4s linear infinite" };
+const EASE = [0.2, 0.8, 0.2, 1];
 
-function useTypewriter(words, speed) {
-  var spd = speed || 80;
-  const [index, setIndex] = useState(0);
-  const [subIndex, setSubIndex] = useState(0);
-  const [deleting, setDeleting] = useState(false);
-  const [text, setText] = useState("");
-  useEffect(() => {
-    if (subIndex === words[index].length + 1 && !deleting) { setTimeout(() => setDeleting(true), 1200); return; }
-    if (subIndex === 0 && deleting) { setDeleting(false); setIndex((i) => (i + 1) % words.length); return; }
-    const timeout = setTimeout(() => { setText(words[index].substring(0, subIndex)); setSubIndex((s) => s + (deleting ? -1 : 1)); }, deleting ? spd / 2 : spd);
-    return () => clearTimeout(timeout);
-  }, [subIndex, index, deleting, words, spd]);
-  return text;
-}
-
-function Particles() {
-  const particles = Array.from({ length: 28 }, (_, i) => ({ id: i, x: Math.random() * 100, y: Math.random() * 100, size: Math.random() * 2 + 1, duration: Math.random() * 15 + 10, delay: Math.random() * 10 }));
+/* fades + rises into place when scrolled into view */
+function Reveal({ children, delay = 0, className = "", as = "div", ...rest }) {
+  const M = motion[as];
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      {particles.map((p) => (
-        <motion.div key={p.id} className="absolute rounded-full bg-violet-400/10" style={{ left: p.x + "%", top: p.y + "%", width: p.size, height: p.size }} animate={{ y: [0, -40, 0], opacity: [0.1, 0.4, 0.1] }} transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }} />
-      ))}
-    </div>
+    <M initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.8, delay, ease: EASE }} className={className} {...rest}>
+      {children}
+    </M>
   );
 }
 
-function SpaceCanvas() {
-  const canvasRef = useRef(null);
-  const stateRef = useRef({ nodes: [], lines: [], selected: null, mouse: { x: 0, y: 0 }, t: 0 });
-  const COLORS = [['#c084fc','#818cf8'],['#f472b6','#c084fc'],['#67e8f9','#818cf8'],['#a78bfa','#f9a8d4'],['#38bdf8','#c084fc']];
-  function makeNodes() { return Array.from({ length: 16 }, () => ({ x: 40 + Math.random() * 520, y: 30 + Math.random() * 260, vx: (Math.random()-0.5)*0.35, vy: (Math.random()-0.5)*0.35, r: 2.5+Math.random()*2, colors: COLORS[Math.floor(Math.random()*COLORS.length)], phase: Math.random()*Math.PI*2 })); }
-  function hexAlpha(hex, a) { return hex + Math.floor(Math.max(0,Math.min(1,a))*255).toString(16).padStart(2,'0'); }
-  useEffect(() => {
-    const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext('2d'); const W=600,H=320; canvas.width=W; canvas.height=H;
-    const s = stateRef.current; s.nodes = makeNodes();
-    function getNode(x,y){return s.nodes.find(n=>Math.hypot(n.x-x,n.y-y)<14)||null;}
-    function onMove(e){const r=canvas.getBoundingClientRect();const sc=W/r.width;s.mouse.x=(e.clientX-r.left)*sc;s.mouse.y=(e.clientY-r.top)*sc;}
-    function onClick(){const n=getNode(s.mouse.x,s.mouse.y);if(!n){s.selected=null;return;}if(!s.selected){s.selected=n;}else if(s.selected!==n){s.lines.push({a:s.selected,b:n,colors:[...s.selected.colors],alpha:0,age:0});s.selected=n;}else{s.selected=null;}}
-    function onRight(e){e.preventDefault();s.selected=null;}
-    canvas.addEventListener('mousemove',onMove); canvas.addEventListener('click',onClick); canvas.addEventListener('contextmenu',onRight);
-    let raf;
-    function draw() {
-      s.t+=0.012; ctx.clearRect(0,0,W,H);
-      const neb=ctx.createRadialGradient(W*0.3,H*0.4,0,W*0.3,H*0.4,280); neb.addColorStop(0,'rgba(120,80,220,0.07)'); neb.addColorStop(1,'transparent'); ctx.fillStyle=neb; ctx.fillRect(0,0,W,H);
-      const neb2=ctx.createRadialGradient(W*0.75,H*0.6,0,W*0.75,H*0.6,200); neb2.addColorStop(0,'rgba(56,189,248,0.06)'); neb2.addColorStop(1,'transparent'); ctx.fillStyle=neb2; ctx.fillRect(0,0,W,H);
-      for(let i=0;i<s.nodes.length;i++)for(let j=i+1;j<s.nodes.length;j++){const d=Math.hypot(s.nodes[i].x-s.nodes[j].x,s.nodes[i].y-s.nodes[j].y);if(d<90){ctx.beginPath();ctx.moveTo(s.nodes[i].x,s.nodes[i].y);ctx.lineTo(s.nodes[j].x,s.nodes[j].y);ctx.strokeStyle='rgba(167,139,250,'+(1-d/90)*0.15+')';ctx.lineWidth=0.5;ctx.stroke();}}
-      s.lines.forEach(l=>{l.alpha=Math.min(1,l.alpha+0.05);l.age+=0.02;const sh=0.6+0.4*Math.sin(l.age*2+s.t);const g=ctx.createLinearGradient(l.a.x,l.a.y,l.b.x,l.b.y);g.addColorStop(0,hexAlpha(l.colors[0],l.alpha*sh));g.addColorStop(0.5,hexAlpha(l.colors[1],l.alpha*sh*0.8));g.addColorStop(1,hexAlpha(l.colors[0],l.alpha*sh));ctx.beginPath();ctx.moveTo(l.a.x,l.a.y);ctx.lineTo(l.b.x,l.b.y);ctx.strokeStyle=g;ctx.lineWidth=1.5;ctx.shadowColor=l.colors[0];ctx.shadowBlur=6;ctx.stroke();ctx.shadowBlur=0;});
-      if(s.selected){ctx.beginPath();ctx.moveTo(s.selected.x,s.selected.y);ctx.lineTo(s.mouse.x,s.mouse.y);ctx.strokeStyle='rgba(167,139,250,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);}
-      s.nodes.forEach(n=>{n.x+=n.vx;n.y+=n.vy;if(n.x<8||n.x>W-8)n.vx*=-1;if(n.y<8||n.y>H-8)n.vy*=-1;const pulse=0.7+0.3*Math.sin(s.t*1.5+n.phase);const isSel=n===s.selected;if(isSel){const glow=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,20);glow.addColorStop(0,hexAlpha(n.colors[1],0.4));glow.addColorStop(1,hexAlpha(n.colors[1],0));ctx.fillStyle=glow;ctx.beginPath();ctx.arc(n.x,n.y,20,0,Math.PI*2);ctx.fill();}const sA=0.3+0.2*Math.sin(s.t*2+n.phase);const rg=ctx.createLinearGradient(n.x-8,n.y-8,n.x+8,n.y+8);rg.addColorStop(0,hexAlpha(n.colors[0],sA));rg.addColorStop(1,hexAlpha(n.colors[1],sA));ctx.beginPath();ctx.arc(n.x,n.y,n.r+3,0,Math.PI*2);ctx.strokeStyle=rg;ctx.lineWidth=0.8;ctx.stroke();const cg=ctx.createRadialGradient(n.x-0.5,n.y-0.5,0,n.x,n.y,n.r);cg.addColorStop(0,'#ffffff');cg.addColorStop(0.4,n.colors[0]);cg.addColorStop(1,n.colors[1]);ctx.beginPath();ctx.arc(n.x,n.y,n.r*pulse,0,Math.PI*2);ctx.fillStyle=cg;ctx.shadowColor=n.colors[0];ctx.shadowBlur=isSel?12:5;ctx.fill();ctx.shadowBlur=0;});
-      raf=requestAnimationFrame(draw);
-    }
-    draw();
-    return ()=>{cancelAnimationFrame(raf);canvas.removeEventListener('mousemove',onMove);canvas.removeEventListener('click',onClick);canvas.removeEventListener('contextmenu',onRight);};
-  }, []);
+/* hero bits: ease in from a slight blur on load */
+function Enter({ children, delay = 0, className = "" }) {
   return (
-    <div className="relative w-full">
-      <canvas ref={canvasRef} className="w-full rounded-2xl" style={{maxHeight:320}} />
-      <div className="flex gap-2 mt-2 justify-end">
-        <button onClick={()=>{stateRef.current.lines=[];stateRef.current.selected=null;}} className="text-xs px-3 py-1 rounded-full border border-violet-500/20 text-violet-400 hover:bg-violet-500/10 transition-all">clear</button>
-        <button onClick={()=>{stateRef.current.nodes=makeNodes();stateRef.current.lines=[];stateRef.current.selected=null;}} className="text-xs px-3 py-1 rounded-full border border-violet-500/20 text-violet-400 hover:bg-violet-500/10 transition-all">shuffle</button>
-      </div>
-      <p className="text-xs text-gray-500 mt-1 text-right">click nodes to connect them</p>
-    </div>
-  );
-}
-
-function LiveWidget({ onClockClick }) {
-  const [time, setTime] = useState('');
-  const [date, setDate] = useState('');
-  useEffect(() => {
-    function tick() {
-      const now = new Date();
-      const sg = new Date(now.toLocaleString('en-US',{timeZone:'Asia/Singapore'}));
-      setTime(sg.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}));
-      setDate(sg.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}));
-    }
-    tick(); const i=setInterval(tick,1000); return ()=>clearInterval(i);
-  },[]);
-  return (
-    <div className="flex flex-col gap-2 mt-6">
-      <div onClick={onClockClick} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-white/5 text-xs cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/30 transition-all group">
-        <span>🕐</span><span className="text-gray-400 group-hover:text-violet-400 transition-colors">Singapore</span><span className="text-gray-900 dark:text-white font-mono ml-auto">{time}</span>
-      </div>
-      <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-white/5 text-xs">
-        <span>📅</span><span className="text-gray-400">Today</span><span className="text-gray-900 dark:text-white font-mono ml-auto">{date}</span>
-      </div>
-    </div>
-  );
-}
-
-function CommandPalette({ onClose }) {
-  const [query, setQuery] = useState('');
-  const items = [
-    {label:'About me',icon:'👋',href:'#about'},
-    {label:'Work experience',icon:'🏢',href:'#experience'},
-    {label:'Undergrad projects',icon:'🔬',href:'#projects'},
-    {label:'Independent projects',icon:'🚀',href:'#independent'},
-    {label:'Skills',icon:'⚡',href:'#skills'},
-    {label:'Certifications',icon:'🏆',href:'#certifications'},
-    {label:'Beyond data',icon:'✨',href:'#beyond'},
-    {label:'Contact',icon:'💬',href:'#contact'},
-    {label:'Email me',icon:'✉️',href:'mailto:sharmishthabhar@gmail.com'},
-    {label:'LinkedIn',icon:'💼',href:'https://linkedin.com/in/sharmishtha-bharti-8ab54b209'},
-    {label:'GitHub',icon:'🐙',href:'https://github.com/Sharmishtha-b'},
-  ];
-  const filtered = items.filter(i=>i.label.toLowerCase().includes(query.toLowerCase()));
-  useEffect(() => {
-    const h=(e)=>{if(e.key==='Escape')onClose();};
-    window.addEventListener('keydown',h); return ()=>window.removeEventListener('keydown',h);
-  },[onClose]);
-  return (
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[500] flex items-start justify-center pt-32 bg-black/60 backdrop-blur-md px-4" onClick={onClose}>
-      <motion.div initial={{scale:0.95,y:-20}} animate={{scale:1,y:0}} exit={{scale:0.95,y:-20}} className="w-full max-w-lg bg-white dark:bg-[#0e0e18] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden" onClick={e=>e.stopPropagation()}>
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-white/5">
-          <span className="text-gray-400 text-sm">⌘</span>
-          <input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search anything..." className="flex-1 bg-transparent text-gray-900 dark:text-white text-sm outline-none placeholder-gray-400" />
-          <kbd className="text-xs text-gray-400 border border-gray-200 dark:border-white/10 px-2 py-0.5 rounded">esc</kbd>
-        </div>
-        <div className="max-h-80 overflow-y-auto py-2">
-          {filtered.map((item,i)=>(
-            <a key={i} href={item.href} onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
-              <span className="text-base">{item.icon}</span>
-              <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-violet-500 transition-colors">{item.label}</span>
-              <span className="ml-auto text-xs text-gray-400">↵</span>
-            </a>
-          ))}
-          {filtered.length===0&&<p className="text-center text-sm text-gray-400 py-8">nothing found</p>}
-        </div>
-        <div className="px-4 py-2 border-t border-gray-100 dark:border-white/5 flex gap-4 text-xs text-gray-400">
-          <span>↑↓ navigate</span><span>↵ select</span><span>esc close</span>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function TimezoneModal({ onClose }) {
-  const zones = [
-    {city:'Singapore',tz:'Asia/Singapore',flag:'🇸🇬'},
-    {city:'Bangalore',tz:'Asia/Kolkata',flag:'🇮🇳'},
-    {city:'London',tz:'Europe/London',flag:'🇬🇧'},
-    {city:'New York',tz:'America/New_York',flag:'🇺🇸'},
-    {city:'Tokyo',tz:'Asia/Tokyo',flag:'🇯🇵'},
-  ];
-  const [times, setTimes] = useState({});
-  useEffect(() => {
-    function tick(){const now=new Date();const t={};zones.forEach(z=>{t[z.city]=new Date(now.toLocaleString('en-US',{timeZone:z.tz})).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});});setTimes(t);}
-    tick(); const i=setInterval(tick,1000); return ()=>clearInterval(i);
-  },[]);
-  return (
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[500] flex items-center justify-center bg-black/60 backdrop-blur-md" onClick={onClose}>
-      <motion.div initial={{scale:0.9,y:20}} animate={{scale:1,y:0}} exit={{scale:0.9}} className="bg-white dark:bg-[#0e0e18] border border-gray-200 dark:border-white/10 rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl" onClick={e=>e.stopPropagation()}>
-        <h3 className="font-bold text-gray-900 dark:text-white mb-1">world clock</h3>
-        <p className="text-xs text-gray-400 mb-6">currently in singapore. bangalore is home base.</p>
-        <div className="space-y-3">
-          {zones.map(z=>(
-            <div key={z.city} className={"flex items-center justify-between p-3 rounded-xl "+(z.city==='Singapore'?"bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20":"bg-gray-50 dark:bg-white/5")}>
-              <div className="flex items-center gap-2">
-                <span>{z.flag}</span>
-                <span className="text-sm text-gray-700 dark:text-gray-300">{z.city}</span>
-                {z.city==='Bangalore'&&<span className="text-xs text-gray-400 bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-full">home</span>}
-              </div>
-              <span className="text-sm font-mono text-gray-900 dark:text-white">{times[z.city]||'--:--'}</span>
-            </div>
-          ))}
-        </div>
-        <button onClick={onClose} className="mt-6 w-full py-2 rounded-xl border border-gray-200 dark:border-white/10 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition-all">close</button>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function HoloCard({ className, children, onClick }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <motion.div
-      onHoverStart={()=>setHovered(true)}
-      onHoverEnd={()=>setHovered(false)}
-      onClick={onClick}
-      className={"rounded-2xl border transition-all duration-300 relative overflow-hidden " + className}
-      style={{
-        borderColor: hovered ? 'rgba(139,92,246,0.4)' : undefined,
-        background: hovered ? 'rgba(255,255,255,0.03)' : undefined,
-      }}
-    >
+    <motion.div initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      transition={{ duration: 1, delay, ease: EASE }} className={className}>
       {children}
     </motion.div>
   );
 }
 
-export default function App() {
-  const [dark, setDark] = useState(true);
-  const [activeSection, setActiveSection] = useState("about");
-  const [logoClicks, setLogoClicks] = useState(0);
-  const [showEaster1, setShowEaster1] = useState(false);
-  const [showEaster2, setShowEaster2] = useState(false);
-  const [showEaster3, setShowEaster3] = useState(false);
-  const [showClock, setShowClock] = useState(false);
-  const [showCmd, setShowCmd] = useState(false);
-  const [confetti, setConfetti] = useState([]);
-  const [flipped, setFlipped] = useState({});
-  const [typedKeys, setTypedKeys] = useState('');
-  const [hoveredNav, setHoveredNav] = useState(null);
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
-  const typedText = useTypewriter(ROLES);
+/* ── node graph ("connect the dots") ─────────────────────── */
+function rng(seed) { let s = seed; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
+
+function NodeGraph() {
+  const [seed, setSeed] = useState(7);
+  const [on, setOn] = useState(false);
+  const [m, setM] = useState({ x: 0, y: 0 });
+  const raf = useRef(0);
 
   useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes holoShift { 0%{background-position:0% center} 100%{background-position:200% center} }
-    `;
-    document.head.appendChild(style);
-    return () => document.head.removeChild(style);
+    const onMove = (e) => {
+      cancelAnimationFrame(raf.current);
+      raf.current = requestAnimationFrame(() => setM({ x: e.clientX / window.innerWidth - 0.5, y: e.clientY / window.innerHeight - 0.5 }));
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => { window.removeEventListener("mousemove", onMove); cancelAnimationFrame(raf.current); };
   }, []);
 
-  useEffect(() => {
-    if (dark) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }, [dark]);
-
-  useEffect(() => {
-    const sections = ["about","experience","projects","independent","skills","certifications","beyond","contact"];
-    const observers = sections.map((id) => {
-      const el = document.getElementById(id); if (!el) return null;
-      const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setActiveSection(id); }, { threshold: 0.3 });
-      obs.observe(el); return obs;
+  const { nodes, lines } = useMemo(() => {
+    const r = rng(seed);
+    const cols = ["#C4B5FD", "#F0ABFC", "#7DD3FC", "#EEEAF6", "#C6F36B"];
+    const nodes = [];
+    for (let i = 0; i < 18; i++) {
+      const a = r() * Math.PI * 2, d = 30 + Math.sqrt(r()) * 165;
+      const rad = 3.2 + r() * 3.6;
+      nodes.push({ x: 235 + Math.cos(a) * d, y: 235 + Math.sin(a) * d, r: rad, halo: rad * 2.8, c: cols[i % 5], d: r() * 3 });
+    }
+    const seen = new Set(), lines = [];
+    nodes.forEach((n, i) => {
+      nodes.map((o, j) => ({ j, dist: Math.hypot(o.x - n.x, o.y - n.y) }))
+        .filter((o) => o.j !== i).sort((p, q) => p.dist - q.dist).slice(0, 2)
+        .forEach((o) => {
+          const key = Math.min(i, o.j) + "-" + Math.max(i, o.j);
+          if (seen.has(key)) return;
+          seen.add(key);
+          lines.push({ a: n, b: nodes[o.j], len: Math.ceil(o.dist), delay: lines.length * 0.05 });
+        });
     });
-    return () => observers.forEach((o) => o && o.disconnect());
-  }, []);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); setShowCmd(c=>!c); return; }
-      if (typeof e.key !== 'string') return;
-      setTypedKeys(k => { const next=(k+e.key).slice(-10); if(next.toLowerCase().includes('data')){setShowEaster3(true);setTimeout(()=>setShowEaster3(false),4000);} return next; });
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
-
-  useEffect(() => {
-    const handler = (e) => {
-      const pieces = Array.from({length:18},(_,i)=>({id:Date.now()+i,x:e.clientX,y:e.clientY,color:['#c084fc','#f472b6','#67e8f9','#a78bfa','#fbbf24'][Math.floor(Math.random()*5)],dx:(Math.random()-0.5)*130,dy:(Math.random()-0.5)*130}));
-      setConfetti(c=>[...c,...pieces]);
-      setTimeout(()=>setConfetti(c=>c.filter(p=>!pieces.find(pp=>pp.id===p.id))),1000);
-    };
-    window.addEventListener('dblclick', handler);
-    return () => window.removeEventListener('dblclick', handler);
-  }, []);
-
-  const handleLogoClick = () => { const n=logoClicks+1; setLogoClicks(n); if(n>=5){setShowEaster1(true);setLogoClicks(0);} };
-  const toggleFlip = (i) => setFlipped(f=>({...f,[i]:!f[i]}));
-  const navLinks = ["about","experience","projects","independent","skills","certifications","beyond","contact"];
-
-  const undergradProjects = [
-    {name:"Parkinsons Detection",desc:"Hybrid CNN-DNN model combining image and tabular data to improve diagnostic accuracy.",back:"The interesting part was integrating two completely different data types — visual MRI scans and clinical features — into one model. Not a standard setup.",tags:["Python","CNN","DNN","ML"],icon:"🧠",github:null},
-    {name:"Customer Churn Prediction",desc:"Classification models to identify high-risk customers and support retention strategies.",back:"Spent more time on feature selection and business interpretation than on the model itself. That is usually where the real work is.",tags:["Python","XGBoost","Sklearn"],icon:"📉",github:"https://github.com/Sharmishtha-b/Customer-Churn-Prediction---Project"},
-    {name:"Drug Prescription Analysis",desc:"NLP pipeline extracting insights from consumer reviews using NLTK for decision support.",back:"Messy real-world text data. Cleaning it and finding meaningful patterns across thousands of reviews was the actual challenge.",tags:["Python","NLP","NLTK"],icon:"💊",github:"https://github.com/Sharmishtha-b/Drug-Prescription-based-on-Consumer-Reviews"},
-    {name:"Diabetes Prediction",desc:"Comparative analysis of ML models with feature engineering and optimization.",back:"Ran six classifiers side by side. The point was not which model won — it was understanding why, and what the features were actually capturing.",tags:["Python","ML","Feature Engineering"],icon:"🔬",github:"https://github.com/Sharmishtha-b/Diabetes-Prediction"},
-  ];
-
-  const funTrack = [
-    {name:"n8n automation — in progress",desc:"First build in this track: a small n8n workflow automating an actual daily annoyance. Low-stakes on purpose — the idea matters more than the stack here.",icon:"✨"},
-  ];
-  const seriousTrack = [
-    {name:"first agentic build — queued next",desc:"An agent framework project scoped around one real workflow, sized like the kind of problem I'd actually be handed at work. n8n/Kafka-style pipeline work follows after.",icon:"⚙️"},
-  ];
-
-  const cardBase = "rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-white/[0.02]";
+    return { nodes, lines };
+  }, [seed]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#08080f] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-500 overflow-x-hidden">
+    <div className="flex flex-col items-center gap-[18px] w-full">
+      <div className="graph-wrap" style={{ perspective: 900 }}>
+        <div className="absolute inset-0" style={{ transform: `translate(${m.x * 16}px, ${m.y * 16}px)`, transition: "transform .6s cubic-bezier(.2,.8,.2,1)" }}>
+          <div className="graph-disc" />
+          <div className="graph-ring">
+            <span className="absolute rounded-full" style={{ left: "50%", top: -5, width: 10, height: 10, marginLeft: -5, background: "#EEEAF6", boxShadow: "0 0 14px #fff" }} />
+            <span className="absolute rounded-full" style={{ right: -4, top: "50%", width: 8, height: 8, marginTop: -4, background: "#C6F36B" }} />
+          </div>
+          <svg viewBox="0 0 470 470" className="absolute inset-0 w-full h-full" role="img" aria-label="A constellation of data points you can connect">
+            <defs>
+              <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#A78BFA" /><stop offset="0.5" stopColor="#F0ABFC" /><stop offset="1" stopColor="#7DD3FC" />
+              </linearGradient>
+            </defs>
+            {lines.map((l, i) => (
+              <line key={i} className="graph-line" x1={l.a.x} y1={l.a.y} x2={l.b.x} y2={l.b.y} stroke="url(#lg)" strokeWidth="2" strokeLinecap="round"
+                style={{ strokeDasharray: l.len, strokeDashoffset: on ? 0 : l.len, transitionDelay: `${l.delay}s` }} />
+            ))}
+            {nodes.map((n, i) => (
+              <g key={i}>
+                <circle className="twinkle" cx={n.x} cy={n.y} r={n.halo} fill={n.c} fillOpacity="0.18" style={{ animationDelay: `${n.d}s` }} />
+                <circle cx={n.x} cy={n.y} r={n.r} fill={n.c} />
+              </g>
+            ))}
+          </svg>
+        </div>
+      </div>
+      <div className="flex flex-col items-center gap-3">
+        <span className="mono text-xs text-[var(--ink-2)] text-center" aria-live="polite">
+          {on ? "you just drew a network graph. that’s basically my job." : "a constellation of data points, waiting for someone to connect them"}
+        </span>
+        <div className="flex gap-2">
+          <button className="mini" onClick={() => setOn((v) => !v)}>{on ? "disconnect" : "connect the dots"}</button>
+          <button className="mini" onClick={() => { setSeed((s) => s + 13); setOn(false); }}>shuffle</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-      <motion.div className="fixed top-0 left-0 right-0 h-[2px] origin-left z-[200]" style={{scaleX,backgroundImage:HOLO,backgroundSize:'200% auto',animation:'holoShift 3s linear infinite'}} />
-      <Particles />
+/* ── project cover drawings (used until a screenshot is added) ── */
+function CoverArt({ art }) {
+  if (art === "curve")
+    return (
+      <svg width="420" height="190" viewBox="0 0 420 190" fill="none" style={{ maxWidth: "88%" }} aria-hidden="true">
+        <path d="M10 40 C110 44 150 58 210 96 S320 170 410 178" stroke="#fff" strokeWidth="3" />
+        <path d="M10 40 C110 40 170 46 230 52 S340 62 410 66" stroke="#fff" strokeOpacity=".45" strokeDasharray="5 7" />
+        <circle cx="210" cy="96" r="7" fill="#fff" />
+      </svg>
+    );
+  if (art === "spiral")
+    return (
+      <svg width="220" height="220" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+        <path d="M100 100 m0 -6 a6 6 0 1 1 -6 6 a14 14 0 1 1 20 -4 a24 24 0 1 1 -34 -10 a36 36 0 1 1 52 6 a50 50 0 1 1 -72 -20 a64 64 0 1 1 96 10" stroke="#fff" strokeWidth="2.4" />
+      </svg>
+    );
+  if (art === "words")
+    return (
+      <div className="flex flex-wrap justify-center gap-2.5 max-w-[360px] px-4" aria-hidden="true">
+        <span className="glass rounded-full px-4 py-2 text-[15px]">side effects</span>
+        <span className="rounded-full px-4 py-2 text-[20px] font-medium bg-white text-[#2A1424]">effective</span>
+        <span className="glass rounded-full px-4 py-2 text-[13px]">dosage</span>
+        <span className="glass rounded-full px-4 py-2 text-[16px]">sleep</span>
+      </div>
+    );
+  return (
+    <svg width="320" height="190" viewBox="0 0 320 190" style={{ maxWidth: "88%" }} aria-hidden="true">
+      <g fill="#fff" fillOpacity=".5">{[[34, 160], [62, 146], [88, 152], [112, 126]].map(([x, y]) => <circle key={x} cx={x} cy={y} r="5" />)}</g>
+      <g fill="#fff">{[[178, 92], [206, 72], [262, 48], [290, 36]].map(([x, y]) => <circle key={x} cx={x} cy={y} r="6.5" />)}</g>
+      <path d="M20 172 L300 26" stroke="#fff" strokeOpacity=".5" strokeDasharray="4 6" />
+    </svg>
+  );
+}
 
-      {confetti.map(p=>(
-        <motion.div key={p.id} className="fixed pointer-events-none z-[600] w-2 h-2 rounded-full" style={{left:p.x,top:p.y,background:p.color}} initial={{scale:1,x:0,y:0,opacity:1}} animate={{x:p.dx,y:p.dy,scale:0,opacity:0}} transition={{duration:0.9,ease:"easeOut"}} />
-      ))}
+function ProjectCard({ p, delay }) {
+  const [a, b, bg] = p.colors || ["#7B61FF", "#F3A6D8", "#1A1430"];
+  const external = p.href && p.href.startsWith("http");
+  return (
+    <Reveal as="a" delay={delay} href={p.href || undefined} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}
+      className="card" style={{ cursor: p.href ? "pointer" : "default" }}>
+      <div className="cover">
+        <div className="cover-art" style={p.image ? undefined : { background: `radial-gradient(circle at 18% 22%, ${a} 0%, transparent 55%), radial-gradient(circle at 85% 85%, ${b} 0%, transparent 50%), ${bg}` }}>
+          {p.image ? <img src={p.image} alt={`${p.name} screenshot`} loading="lazy" /> : <CoverArt art={p.art} />}
+        </div>
+        <span className="glass mono absolute left-[18px] top-[18px] rounded-full px-3 py-2 text-[11px]">{p.tag}</span>
+      </div>
+      <div className="flex items-center justify-between gap-4 px-6 pt-[22px] pb-6">
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <span className="text-[22px] font-medium">{p.name}</span>
+          <span className="text-[15px] text-[var(--muted)]">{p.blurb}</span>
+        </div>
+        <span className="go" aria-hidden="true">→</span>
+      </div>
+    </Reveal>
+  );
+}
 
-      <AnimatePresence>
-        {showEaster1 && (
-          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 backdrop-blur-md" onClick={()=>setShowEaster1(false)}>
-            <motion.div initial={{scale:0.8,y:30}} animate={{scale:1,y:0}} exit={{scale:0.8}} className="bg-white dark:bg-[#0e0e18] border border-violet-500/30 rounded-3xl p-10 max-w-sm text-center shadow-2xl">
-              <div className="text-6xl mb-4">👾</div>
-              <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">you found me!</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">clicked five times. thorough, detail-oriented, clearly bored. all green flags honestly.</p>
-              <button onClick={()=>setShowEaster1(false)} className="mt-6 px-6 py-2 rounded-full text-sm text-white" style={{background:HOLO,backgroundSize:'200% auto',animation:'holoShift 3s linear infinite'}}>noted</button>
-            </motion.div>
-          </motion.div>
-        )}
-        {showEaster2 && (
-          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 backdrop-blur-md" onClick={()=>setShowEaster2(false)}>
-            <motion.div initial={{scale:0.8}} animate={{scale:1}} exit={{scale:0.8}} className="bg-white dark:bg-[#0e0e18] border border-green-500/30 rounded-3xl p-10 max-w-sm text-center shadow-2xl">
-              <div className="text-6xl mb-4">🌟</div>
-              <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">the 9.58</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">terrible hostel food, bad wifi, a lot of late nights, and a stubborn refusal to accept anything less than an A. worth it? ask me later.</p>
-              <button onClick={()=>setShowEaster2(false)} className="mt-6 px-6 py-2 bg-green-600 rounded-full text-sm text-white">respect</button>
-            </motion.div>
-          </motion.div>
-        )}
-        {showEaster3 && (
-          <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:20}} className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[500] bg-white dark:bg-[#0e0e18] border border-cyan-500/30 rounded-2xl px-6 py-4 text-center shadow-xl">
-            <p className="text-cyan-500 font-medium text-sm">you typed data. you belong here.</p>
-          </motion.div>
-        )}
-        {showClock && <TimezoneModal onClose={()=>setShowClock(false)} />}
-        {showCmd && <CommandPalette onClose={()=>setShowCmd(false)} />}
-      </AnimatePresence>
+function HobbyIcon({ name, color }) {
+  const s = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.6, "aria-hidden": true };
+  if (name === "film") return <svg {...s}><rect x="3" y="6" width="18" height="14" rx="2" /><path d="M3 10h18M7 6l2 4M12 6l2 4M17 6l2 4" /></svg>;
+  if (name === "pan") return <svg {...s}><circle cx="10" cy="13" r="6" /><path d="M16 13h6" /></svg>;
+  return <svg {...s}><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /></svg>;
+}
 
-      <nav className="fixed top-[2px] left-0 right-0 z-50 flex items-center justify-between px-8 py-4 backdrop-blur-xl bg-gray-50/80 dark:bg-[#08080f]/80 border-b border-gray-200 dark:border-white/5">
-        <span onClick={handleLogoClick} className="font-bold text-lg tracking-tight select-none" style={HOLO_ANIM}>sb.</span>
-        <div className="flex items-center gap-5 text-sm">
-          {navLinks.map((link)=>(
-            <a key={link} href={"#"+link}
-              onMouseEnter={()=>setHoveredNav(link)}
-              onMouseLeave={()=>setHoveredNav(null)}
-              className="transition-all relative text-sm"
-              style={(hoveredNav===link||activeSection===link) ? {color:'#8b5cf6',fontWeight:500} : {color:'rgb(107,114,128)'}}>
-              {link}
+/* ── ⌘K command palette ───────────────────────────────────── */
+function CommandPalette({ onClose }) {
+  const [q, setQ] = useState("");
+  useEffect(() => {
+    const h = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [onClose]);
+  const items = [
+    { label: "Projects", href: "#work" },
+    { label: "Side quests", href: "#side" },
+    { label: "Experience", href: "#experience" },
+    { label: "Beyond data", href: "#beyond" },
+    { label: "Contact", href: "#contact" },
+    { label: "Résumé (PDF)", href: links.resume },
+    { label: "Email me", href: `mailto:${links.email}` },
+    { label: "LinkedIn", href: links.linkedin },
+    { label: "GitHub", href: links.github },
+  ];
+  const shown = items.filter((i) => i.label.toLowerCase().includes(q.toLowerCase()));
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
+      className="fixed inset-0 z-[500] flex items-start justify-center pt-32 px-4 bg-black/60 backdrop-blur-md">
+      <motion.div initial={{ scale: 0.96, y: -12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: -12 }} onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#121019] shadow-2xl overflow-hidden" role="dialog" aria-label="Command menu">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5">
+          <span className="mono text-[var(--muted)] text-sm">⌘</span>
+          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="search anything…" aria-label="Search the site"
+            className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-[var(--muted)]" />
+          <kbd className="mono text-[11px] text-[var(--muted)] border border-white/10 rounded px-2 py-0.5">esc</kbd>
+        </div>
+        <div className="py-2 max-h-80 overflow-y-auto">
+          {shown.map((i) => (
+            <a key={i.label} href={i.href} onClick={onClose} className="flex items-center justify-between px-5 py-3 text-[15px] text-[var(--ink-2)] hover:bg-white/5 hover:text-white">
+              {i.label}<span className="mono text-xs text-[var(--muted)]">↵</span>
             </a>
           ))}
-          <button onClick={()=>setShowCmd(true)} className="text-xs text-gray-400 border border-gray-200 dark:border-white/10 px-2 py-1 rounded-lg hover:border-violet-400 transition-all">⌘K</button>
-          <button onClick={()=>setDark(d=>!d)} className="px-3 py-1 rounded-full border border-gray-200 dark:border-white/10 text-xs hover:bg-gray-100 dark:hover:bg-white/10 transition-all text-gray-600 dark:text-gray-400">{dark?"light":"dark"}</button>
+          {shown.length === 0 && <p className="text-center text-sm text-[var(--muted)] py-8">nothing found</p>}
         </div>
-      </nav>
+      </motion.div>
+    </motion.div>
+  );
+}
 
-      <main className="relative z-10 max-w-5xl mx-auto px-6 pt-32 pb-20">
+/* ── page ─────────────────────────────────────────────────── */
+export default function App() {
+  const [showCmd, setShowCmd] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [confetti, setConfetti] = useState([]);
+  const [active, setActive] = useState("top");
+  const logoClicks = useRef(0);
+  const toastTimer = useRef(0);
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
-        <motion.section initial={{opacity:0,y:40}} animate={{opacity:1,y:0}} transition={{duration:0.9}} className="mb-32 min-h-[90vh] grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div>
-            <motion.div initial={{opacity:0,x:-20}} animate={{opacity:1,x:0}} transition={{delay:0.2}} className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-500 text-xs font-medium mb-8 w-fit">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse cursor-pointer" onClick={()=>setShowEaster2(true)} />
-              open to opportunities
+  const say = (msg) => {
+    clearTimeout(toastTimer.current);
+    setToast(msg);
+    toastTimer.current = setTimeout(() => setToast(null), 4200);
+  };
+
+  // ⌘K, and typing "data"
+  useEffect(() => {
+    let typed = "";
+    const h = (e) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); setShowCmd((c) => !c); return; }
+      if (typeof e.key !== "string" || e.key.length !== 1) return;
+      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+      typed = (typed + e.key).slice(-10).toLowerCase();
+      if (typed.includes("data")) { typed = ""; say("you typed data. you belong here."); }
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
+
+  // double click for confetti
+  useEffect(() => {
+    const h = (e) => {
+      const pieces = Array.from({ length: 18 }, (_, i) => ({
+        id: `${Date.now()}-${i}`, x: e.clientX, y: e.clientY,
+        c: ["#A78BFA", "#F0ABFC", "#7DD3FC", "#EEEAF6", "#C6F36B"][i % 5],
+        dx: (Math.random() - 0.5) * 140, dy: (Math.random() - 0.5) * 140,
+      }));
+      setConfetti((c) => [...c, ...pieces]);
+      setTimeout(() => setConfetti((c) => c.filter((p) => !pieces.includes(p))), 1000);
+    };
+    window.addEventListener("dblclick", h);
+    return () => window.removeEventListener("dblclick", h);
+  }, []);
+
+  // highlight the nav link for the section on screen
+  useEffect(() => {
+    const obs = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && setActive(e.target.id)), { rootMargin: "-45% 0px -50% 0px" });
+    ["top", "work", "side", "experience", "beyond", "contact"].forEach((id) => { const el = document.getElementById(id); if (el) obs.observe(el); });
+    return () => obs.disconnect();
+  }, []);
+
+  const onLogo = () => {
+    logoClicks.current += 1;
+    if (logoClicks.current >= 5) { logoClicks.current = 0; say("clicked five times. thorough, detail-oriented, clearly bored. all green flags honestly."); }
+  };
+
+  const wrap = "max-w-[1240px] mx-auto px-4 sm:px-8 lg:px-12";
+  const navActive = (id) => (active === id || (id === "work" && active === "side") ? " active" : "");
+
+  return (
+    <MotionConfig reducedMotion="user">
+      <div className="page-bg min-h-screen overflow-x-hidden">
+        <motion.div className="fixed top-0 left-0 right-0 h-[2px] origin-left z-[200]" style={{ scaleX: progress, background: "linear-gradient(90deg,#a78bfa,#f0abfc,#7dd3fc)" }} />
+
+        {confetti.map((p) => (
+          <motion.span key={p.id} className="fixed pointer-events-none z-[600] w-2 h-2 rounded-full" style={{ left: p.x, top: p.y, background: p.c }}
+            initial={{ x: 0, y: 0, opacity: 1, scale: 1 }} animate={{ x: p.dx, y: p.dy, opacity: 0, scale: 0 }} transition={{ duration: 0.9, ease: "easeOut" }} />
+        ))}
+
+        <AnimatePresence>
+          {showCmd && <CommandPalette onClose={() => setShowCmd(false)} />}
+          {toast && (
+            <motion.div key="toast" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} role="status"
+              className="glass fixed bottom-8 left-1/2 -translate-x-1/2 z-[500] rounded-2xl px-6 py-4 text-sm text-center max-w-[90vw]">
+              {toast}
             </motion.div>
-            <h1 className="text-7xl font-bold tracking-tight mb-2 leading-none">
-              <span className="block text-gray-900 dark:text-white">Sharmishtha</span>
-              <span className="block" style={HOLO_ANIM}>Bharti.</span>
-            </h1>
-            <div className="flex items-center gap-2 mt-6 mb-6 h-10">
-              <span className="text-xl font-medium text-violet-500 dark:text-violet-400">{typedText}</span>
-              <span className="w-0.5 h-7 bg-violet-500 animate-pulse" />
-            </div>
-            <p className="text-lg text-gray-500 dark:text-gray-400 max-w-lg leading-relaxed">
-              The kind of person who is quietly observing in the corner but loudly debugging at work. I ended up in data because I cannot stop asking <span className="text-gray-900 dark:text-white font-medium">why things work the way they do</span> — and data tends to have the most honest answers.
-            </p>
-            <div className="flex gap-4 mt-8 flex-wrap">
-              <a href="#projects" className="px-6 py-3 text-white rounded-full text-sm font-medium transition-all hover:scale-105 hover:opacity-90" style={{background:HOLO,backgroundSize:'200% auto',animation:'holoShift 4s linear infinite'}}>see my work</a>
-              <a href="#contact" className="px-6 py-3 border border-gray-200 dark:border-white/10 rounded-full text-sm hover:bg-gray-100 dark:hover:bg-white/5 transition-all text-gray-700 dark:text-gray-300">get in touch</a>
-              <a href="/resume.pdf" download className="px-6 py-3 border border-violet-500/30 text-violet-500 rounded-full text-sm hover:bg-violet-500/10 transition-all">resume</a>
-            </div>
-            <LiveWidget onClockClick={()=>setShowClock(true)} />
-          </div>
-          <div className="hidden md:block"><SpaceCanvas /></div>
-        </motion.section>
+          )}
+        </AnimatePresence>
 
-        <motion.section id="about" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />01 about</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h2 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">a little about me</h2>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">I'm currently doing an MSBA at NUS Singapore, specifically to get better at the business half of the data equation — the technical side I already trust myself with, it was the "so what does this actually mean for the business" part I wanted formal training in.</p>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed mt-4">Before this, I spent about two years as a data &amp; business analyst at PwC AC India — turning messy business problems into data models, then making sure the resulting insight actually landed with the people who had to act on it.</p>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed mt-4">9.58 CGPA from SRM Chennai. McKinsey Forward alumni. Amazon ML Summer School 2023. And yes, click the star below for the less CV version of that.</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                {label:"current status",value:"MSBA Candidate, NUS",icon:"🎓"},
-                {label:"based in",value:"Singapore",icon:"📍"},
-                {label:"prior role",value:"Associate @ PwC ('24–'26)",icon:"💼"},
-                {label:"cgpa",value:"9.58 / 10",icon:"⭐",secret:true},
-              ].map((item)=>(
-                <HoloCard key={item.label} className={"p-4 "+(item.secret?"cursor-pointer ":"")+"bg-white dark:bg-white/[0.02]"} onClick={()=>item.secret&&setShowEaster2(true)}>
-                  <div className="text-xl mb-2">{item.icon}</div>
-                  <p className="text-xs text-gray-400 mb-1">{item.label}</p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{item.value}</p>
-                </HoloCard>
-              ))}
-            </div>
-          </div>
-        </motion.section>
+        {/* floating nav */}
+        <div className="sticky top-4 z-50 flex justify-center px-4">
+          <nav className="glass flex items-center gap-4 sm:gap-7 rounded-full py-2 pr-2 pl-5 text-sm">
+            <button onClick={onLogo} className="holo font-semibold text-[18px] tracking-[-0.02em]" aria-label="sb. (logo)">sb.</button>
+            <a href="#work" className={"navlink" + navActive("work")}>projects</a>
+            <a href="#experience" className={"navlink" + navActive("experience")}>experience</a>
+            <a href="#beyond" className={"navlink hidden sm:inline" + navActive("beyond")}>beyond</a>
+            <button onClick={() => setShowCmd(true)} className="navlink mono text-xs hidden sm:inline" aria-label="Open command menu">⌘K</button>
+            <a href="#contact" className="rounded-full bg-[var(--ink)] text-[var(--bg)] font-medium px-4 py-2.5">say hi</a>
+          </nav>
+        </div>
 
-        <motion.section id="experience" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />02 experience</p>
-          <h2 className="text-4xl font-bold mb-10 text-gray-900 dark:text-white">where I have been</h2>
-          <div className="space-y-6">
-            {[
-              {role:"Associate - Data and Analytics",company:"PwC AC India",period:"Aug 2024 - Jun 2026",location:"Bangalore",icon:"🏢",points:[
-                "Modeled and transformed source data in DBT on Snowflake, pulling data in through AWS Glue, to migrate a client off a 30-year-old legacy platform from kickoff through handover",
-                "Built IICS pipelines during a source system migration, then ran QA testing and root-cause analysis on migrated pipelines — fixing pipeline logic behind client-flagged discrepancies and tracing issues back to source-data problems",
-                "Converted IBM DataStage jobs and JCL scripts into SQL-based Databricks jobs for a Teradata-to-Databricks migration, validating job sequencing and troubleshooting failures to confirm each conversion ran correctly",
-                "Developed automated Power BI dashboards backed by SQL to replace manual reporting, reconciling against legacy reports to validate accuracy ahead of go-live",
-                "Partnered with global clients to translate ambiguous business problems into structured, scoped analytics solutions",
-                "Presented analytical insights and recommendations to senior stakeholders to support data-driven decisions",
-                "Mentored interns — assigning tasks and walking new hires through pipeline and project workflows",
-              ]},
-              {role:"Intern - Data and Analytics",company:"PwC AC India",period:"Apr 2024 - Aug 2024",location:"Bangalore",icon:"🚀",points:[
-                "Benchmarked statistical (ARIMA, Holt-Winters) against ML (Random Forest, XGBoost) forecasting models at the SKU level for a major homebuilding client — statistical approaches won out",
-                "Applied those findings across four product categories (taps, doors, handles, bathtubs) to guide SKU-level inventory recommendations",
-                "Documented and organized engagement outputs into clean, stakeholder-ready deliverables",
-              ]},
-            ].map((job,i)=>(
-              <HoloCard key={i} className="p-6 bg-white dark:bg-white/[0.02]">
-                <motion.div whileHover={{x:4}} transition={{type:'spring',stiffness:300}}>
-                  <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{job.icon}</span>
-                      <div><h3 className="font-semibold text-gray-900 dark:text-white">{job.role}</h3><p className="text-violet-500 text-sm">{job.company} · {job.location}</p></div>
-                    </div>
-                    <span className="text-xs text-gray-400 border border-gray-200 dark:border-white/10 px-3 py-1 rounded-full">{job.period}</span>
-                  </div>
-                  <ul className="space-y-2 ml-11">{job.points.map((p,j)=>(<li key={j} className="text-gray-600 dark:text-gray-400 flex gap-2 text-sm leading-relaxed"><span className="text-violet-500 mt-0.5 flex-shrink-0">›</span>{p}</li>))}</ul>
-                </motion.div>
-              </HoloCard>
-            ))}
-          </div>
-        </motion.section>
-
-        <motion.section id="projects" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />03 undergrad projects</p>
-          <h2 className="text-4xl font-bold mb-2 text-gray-900 dark:text-white">the undergrad archive</h2>
-          <p className="text-gray-400 text-sm mb-10">college-era ML work — kept for the record. click a card to flip it, the back is the part that does not make it into the abstract</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {undergradProjects.map((project,i)=>(
-              <div key={i} className="h-56 cursor-pointer" style={{perspective:'1000px'}} onClick={()=>toggleFlip(i)}>
-                <motion.div animate={{rotateY:flipped[i]?180:0}} transition={{duration:0.5,type:"spring"}} style={{transformStyle:'preserve-3d',position:'relative',width:'100%',height:'100%'}}>
-                  <div style={{backfaceVisibility:'hidden',position:'absolute',inset:0}}>
-                    <HoloCard className={"p-6 h-full flex flex-col justify-between bg-white dark:bg-white/[0.02]"}>
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2"><span className="text-xl">{project.icon}</span><h3 className="font-semibold text-gray-900 dark:text-white">{project.name}</h3></div>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20">built</span>
-                        </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{project.desc}</p>
-                      </div>
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex flex-wrap gap-2">{project.tags.map(tag=>(<span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">{tag}</span>))}</div>
-                        {project.github && (
-                          <a href={project.github} target="_blank" rel="noopener noreferrer" onClick={(e)=>e.stopPropagation()} className="text-xs px-2 py-1 rounded-full border border-gray-300 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-violet-600 hover:border-violet-400 dark:hover:text-violet-300 transition-colors flex items-center gap-1 flex-shrink-0" style={{cursor:'pointer'}}>
-                            code ↗
-                          </a>
-                        )}
-                      </div>
-                    </HoloCard>
-                  </div>
-                  <div style={{backfaceVisibility:'hidden',transform:'rotateY(180deg)',position:'absolute',inset:0}} className="p-6 rounded-2xl border border-violet-500/30 bg-violet-50 dark:bg-violet-950/40 flex flex-col justify-center">
-                    <div className="text-3xl mb-3">{project.icon}</div>
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm">{project.back}</p>
-                    <p className="text-xs text-violet-500 mt-4">click to flip back</p>
-                  </div>
-                </motion.div>
+        {/* hero */}
+        <section id="top" className={wrap + " flex flex-col lg:flex-row items-center gap-12 pt-14 sm:pt-24 pb-[72px]"}>
+          <div className="flex-[1.1] flex flex-col gap-[26px] min-w-0 w-full">
+            <Enter className="self-start">
+              <span className="mono inline-flex items-center gap-2.5 text-xs text-[var(--ink-2)] px-3.5 py-2 border border-white/10 rounded-full">
+                <span className="live" />open to opportunities · singapore
+              </span>
+            </Enter>
+            <Enter delay={0.1}>
+              <h1 className="m-0 font-semibold text-[clamp(56px,7vw,100px)] leading-[0.95] tracking-[-0.045em]">
+                Sharmishtha<br /><span className="holo">Bharti.</span>
+              </h1>
+            </Enter>
+            <Enter delay={0.2}>
+              <p className="m-0 max-w-[520px] text-[19px] sm:text-[20px] leading-[1.55] text-[var(--ink-2)]">
+                The kind of person who is quietly observing in the corner but loudly debugging at work. I ended up in data because I can’t stop asking{" "}
+                <span className="text-[var(--ink)] font-medium">why things work the way they do</span> — and data tends to have the most honest answers.
+              </p>
+            </Enter>
+            <Enter delay={0.3} className="flex gap-3 flex-wrap">
+              <a className="btn btn-light" href="#work">see my work <span aria-hidden="true">→</span></a>
+              <a className="btn glass" href={links.resume} target="_blank" rel="noreferrer">résumé</a>
+            </Enter>
+            <Enter delay={0.42} className="flex flex-wrap mt-2.5">
+              <div className="flex flex-col gap-1 pr-6 sm:pr-[26px]">
+                <span className="text-[28px] font-medium tracking-[-0.03em]">2 yrs</span>
+                <span className="mono text-xs text-[var(--muted)]">at PwC AC India</span>
               </div>
+              <div className="flex flex-col gap-1 px-6 sm:px-[26px] border-l border-white/10">
+                <span className="text-[28px] font-medium tracking-[-0.03em]">MSBA</span>
+                <span className="mono text-xs text-[var(--muted)]">NUS, 2026–27</span>
+              </div>
+              <div className="flex flex-col gap-1 pl-6 sm:pl-[26px] border-l border-white/10">
+                <button className="text-left text-[28px] font-medium tracking-[-0.03em]"
+                  onClick={() => say("the 9.58: terrible hostel food, bad wifi, a lot of late nights, and a stubborn refusal to accept anything less than an A. worth it? ask me later.")}>
+                  9.58
+                </button>
+                <span className="mono text-xs text-[var(--muted)]">CGPA · click it</span>
+              </div>
+            </Enter>
+          </div>
+          <Enter delay={0.2} className="flex-1 flex justify-center w-full min-w-0">
+            <NodeGraph />
+          </Enter>
+        </section>
+
+        {/* tools ticker */}
+        <div className="ticker" aria-label="Tools I work with">
+          <div className="ticker-track mono text-sm text-[var(--muted)]">
+            {[...tools, ...tools].map((t, i) => (
+              <span key={i} className="inline-flex items-center gap-12 pr-12 whitespace-nowrap" aria-hidden={i >= tools.length}>
+                {t}<span className="text-[#4b4560]">✦</span>
+              </span>
             ))}
           </div>
-        </motion.section>
+        </div>
 
-        <motion.section id="independent" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />04 independent projects</p>
-          <h2 className="text-4xl font-bold mb-2 text-gray-900 dark:text-white">the ones nobody assigned me</h2>
-          <p className="text-gray-400 text-sm mb-10 max-w-xl">building on two tracks during the MSBA — one for the fun of it, one to actually solve something end to end. this section fills in as I ship.</p>
+        {/* 01 — projects */}
+        <section id="work" className={wrap + " pt-[104px] pb-8 scroll-mt-24"}>
+          <Reveal className="flex justify-between items-end gap-6 flex-wrap mb-10">
+            <div className="flex flex-col gap-3">
+              <span className="mono text-xs text-[var(--violet)]">01 — projects</span>
+              <h2 className="m-0 font-semibold text-[clamp(38px,4.6vw,58px)] tracking-[-0.04em] leading-none">things I’ve built</h2>
+            </div>
+            <span className="mono text-[13px] text-[var(--muted)]">the big builds · undergrad ones hold the spot for now</span>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-xs tracking-widest uppercase mb-1 font-medium text-pink-500">for fun</p>
-              <p className="text-gray-400 text-xs mb-4">side quests, vibe-coded weekends, ideas that would not leave me alone</p>
-              <div className="space-y-4">
-                {funTrack.map((p,i)=>(
-                  <HoloCard key={i} className="p-6 border-dashed bg-white dark:bg-white/[0.02]">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2"><span className="text-xl">{p.icon}</span><h3 className="font-semibold text-gray-900 dark:text-white">{p.name}</h3></div>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-500 border border-pink-500/20 flex-shrink-0">in progress</span>
-                    </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{p.desc}</p>
-                  </HoloCard>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs tracking-widest uppercase mb-1 font-medium text-cyan-500">for real</p>
-              <p className="text-gray-400 text-xs mb-4">agentic workflows, n8n / Kafka-style pipelines, built to solve an actual problem</p>
-              <div className="space-y-4">
-                {seriousTrack.map((p,i)=>(
-                  <HoloCard key={i} className="p-6 border-dashed bg-white dark:bg-white/[0.02]">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2"><span className="text-xl">{p.icon}</span><h3 className="font-semibold text-gray-900 dark:text-white">{p.name}</h3></div>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 flex-shrink-0">queued</span>
-                    </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{p.desc}</p>
-                  </HoloCard>
-                ))}
-              </div>
-            </div>
+            {projects.map((p, i) => <ProjectCard key={p.name} p={p} delay={(i % 2) * 0.1} />)}
           </div>
-        </motion.section>
+        </section>
 
-        <motion.section id="skills" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />05 skills</p>
-          <h2 className="text-4xl font-bold mb-10 text-gray-900 dark:text-white">what I work with</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              {category:"Languages",items:["Python","SQL","R","Bash"],color:"from-blue-500/10 to-violet-500/10"},
-              {category:"Data and Cloud",items:["Snowflake","AWS","Azure","Databricks","DBT","Informatica IICS","Teradata","BigQuery","Redshift"],color:"from-violet-500/10 to-pink-500/10"},
-              {category:"ML and AI",items:["Scikit-learn","XGBoost","ARIMA","TensorFlow","NLTK","Pandas","NumPy","Matplotlib","Seaborn","Jupyter"],color:"from-pink-500/10 to-orange-500/10"},
-              {category:"Tools and Viz",items:["Power BI","Tableau","Excel","Git","VS Code","Streamlit","FastAPI"],color:"from-cyan-500/10 to-violet-500/10"},
-            ].map((group)=>(
-              <HoloCard key={group.category} className={"p-6 bg-gradient-to-br "+group.color}>
-                <p className="text-xs tracking-widest uppercase mb-4 font-medium text-violet-500 dark:text-violet-400">{group.category}</p>
-                <div className="flex flex-wrap gap-2">{group.items.map(item=>(<motion.span key={item} whileHover={{scale:1.08}} className="text-sm px-3 py-1.5 rounded-full bg-white/70 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-300 transition-all border border-gray-200/50 dark:border-white/5">{item}</motion.span>))}</div>
-              </HoloCard>
+        {/* 02 — side quests */}
+        <section id="side" className={wrap + " flex flex-col lg:flex-row gap-8 pt-[72px] pb-8 scroll-mt-24"}>
+          <Reveal className="flex-1 flex flex-col gap-3.5">
+            <span className="mono text-xs text-[var(--pink)]">02 — the ones nobody assigned me</span>
+            <h2 className="m-0 font-semibold text-[clamp(30px,3.4vw,42px)] tracking-[-0.035em] leading-[1.05]">small builds, side quests, and ideas that wouldn’t leave me alone.</h2>
+            <p className="m-0 text-base text-[var(--muted)]">quick weekend things. click any of them to try it or see the code.</p>
+          </Reveal>
+          <Reveal delay={0.1} className="flex-[1.2] rounded-[20px] border border-white/[0.08] bg-[#0C0B12] px-[26px] py-[22px] mono text-sm leading-[2.1] text-[var(--ink-2)]">
+            <div className="text-[var(--muted)]">~/sharmishtha $ ls side-quests</div>
+            {sideQuests.map((q) => (
+              <a key={q.name} href={q.href || undefined} className="flex justify-between gap-4 hover:text-white" style={{ color: q.muted ? "#8C86A6" : "var(--ink)" }}>
+                <span>{q.name}  <span style={{ color: q.muted ? undefined : "var(--lime)" }}>{q.status}</span></span>
+                <span className="text-[var(--muted)]" aria-hidden="true">↗</span>
+              </a>
             ))}
-          </div>
-        </motion.section>
+            <div>~/sharmishtha $ <span className="cursor text-[var(--lime)]">█</span></div>
+          </Reveal>
+        </section>
 
-        <motion.section id="certifications" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />06 certifications and awards</p>
-          <h2 className="text-4xl font-bold mb-10 text-gray-900 dark:text-white">credentials</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              {name:"Microsoft Azure AZ-900",issuer:"Microsoft",type:"cert",icon:"☁️"},
-              {name:"Microsoft Azure AI-900",issuer:"Microsoft",type:"cert",icon:"🤖"},
-              {name:"Microsoft Azure DP-900",issuer:"Microsoft",type:"cert",icon:"📊"},
-              {name:"AWS Machine Learning",issuer:"Amazon Web Services",type:"cert",icon:"🧠"},
-              {name:"McKinsey Forward Program",issuer:"McKinsey and Company",type:"award",icon:"🏆"},
-              {name:"Amazon ML Summer School 2023",issuer:"Amazon",type:"award",icon:"🌟"},
-              {name:"Academic Scholarship 2020-21",issuer:"SRM Institute",type:"award",icon:"🎓"},
-            ].map((cert,i)=>(
-              <HoloCard key={i} className="p-4 flex items-center gap-4 bg-white dark:bg-white/[0.02]">
-                <span className="text-2xl">{cert.icon}</span>
-                <div className="flex-1 min-w-0"><p className="font-medium text-gray-900 dark:text-white">{cert.name}</p><p className="text-sm text-gray-400">{cert.issuer}</p></div>
-                <span className={cert.type==="cert"?"text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 flex-shrink-0":"text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 flex-shrink-0"}>{cert.type==="cert"?"certified":"award"}</span>
-              </HoloCard>
+        {/* 03 — experience */}
+        <section id="experience" className={wrap + " flex flex-col lg:flex-row gap-12 pt-[88px] pb-8 scroll-mt-24"}>
+          <Reveal className="flex-[0.8] flex flex-col gap-3.5">
+            <span className="mono text-xs text-[var(--violet)]">03 — experience</span>
+            <h2 className="m-0 font-semibold text-[clamp(38px,4.6vw,58px)] tracking-[-0.04em] leading-none">where I’ve been</h2>
+            <p className="m-0 text-[17px] leading-relaxed text-[var(--muted)] max-w-[380px]">the technical side I already trust myself with. the “so what does this mean for the business” part is why I’m at NUS.</p>
+          </Reveal>
+          <div className="flex-[1.2] flex flex-col">
+            {experience.map((x, i) => (
+              <Reveal key={x.role} className={"tl" + (i === experience.length - 1 ? " tl-last" : "")}>
+                <span className="absolute rounded-full" style={x.current
+                  ? { left: -6, top: 4, width: 11, height: 11, background: "var(--lime)", boxShadow: "0 0 0 5px rgba(198,243,107,.15)" }
+                  : { left: -5, top: 5, width: 9, height: 9, background: "#3a3550" }} />
+                <div className="flex justify-between gap-4 flex-wrap">
+                  <span className="text-[20px] font-medium">{x.role}</span>
+                  <span className="mono text-xs text-[var(--muted)]">{x.dates}</span>
+                </div>
+                <span className="text-[15px] text-[var(--muted)]">{x.org}</span>
+                {x.text && <p className="mt-3 mb-0 text-base leading-relaxed text-[var(--ink-2)]">{x.text}</p>}
+              </Reveal>
             ))}
+            <Reveal className="flex flex-wrap gap-2 mt-9">
+              {credentials.map((c) => <span key={c} className="mono text-xs rounded-full border border-white/10 px-3 py-2 text-[var(--ink-2)]">{c}</span>)}
+            </Reveal>
           </div>
-        </motion.section>
+        </section>
 
-        <motion.section id="beyond" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-32">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />07 beyond data</p>
-          <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">not just a data person</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-10 max-w-lg leading-relaxed">I claim to be a very boring person. the evidence suggests otherwise.</p>
+        {/* 04 — beyond data */}
+        <section id="beyond" className={wrap + " pt-[88px] pb-8 flex flex-col gap-7 scroll-mt-24"}>
+          <Reveal className="flex flex-col gap-3">
+            <span className="mono text-xs text-[var(--cyan)]">04 — beyond data</span>
+            <h2 className="m-0 font-semibold text-[clamp(38px,4.6vw,58px)] tracking-[-0.04em] leading-none">not just a data person</h2>
+            <p className="m-0 text-[17px] text-[var(--muted)]">I claim to be a very boring person. the evidence suggests otherwise.</p>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {icon:"🎬",title:"movies and shows",desc:"I watch a lot. I have opinions. Do not ask me to pick a favourite because I will overthink it.",color:"hover:border-orange-300 dark:hover:border-orange-500/20"},
-              {icon:"🍳",title:"cooking and food",desc:"I cook when I need to think. Also very excited about hawker food — genuinely part of the appeal of Singapore.",color:"hover:border-yellow-300 dark:hover:border-yellow-500/20"},
-              {icon:"✈️",title:"travel",desc:"Love it, do not do it enough. Working on that.",color:"hover:border-blue-300 dark:hover:border-blue-500/20"},
-              {icon:"🏀",title:"basketball",desc:"I play when I can. Good at passing, working on everything else.",color:"hover:border-green-300 dark:hover:border-green-500/20"},
-              {icon:"💃",title:"dance",desc:"This one surprises people who have only seen me in work mode. There are two versions of me.",color:"hover:border-purple-300 dark:hover:border-purple-500/20"},
-            ].map((item,i)=>(
-              item.href
-                ? <HoloCard key={i} className={"p-6 block bg-white dark:bg-white/[0.02] "+item.color}>
-                    <a href={item.href} target="_blank" rel="noreferrer" className="block">
-                      <div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center text-xl">{item.icon}</div><div><p className="font-semibold text-gray-900 dark:text-white">{item.title}</p><p className="text-xs text-pink-400">{item.sub}</p></div></div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
-                      <p className="text-xs text-pink-400 mt-4">{item.link}</p>
-                    </a>
-                  </HoloCard>
-                : <HoloCard key={i} className={"p-6 bg-white dark:bg-white/[0.02] "+item.color}>
-                    <div className="text-2xl mb-3">{item.icon}</div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{item.title}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
-                  </HoloCard>
+            {hobbies.map((h, i) => (
+              <Reveal key={h.title} delay={i * 0.06} className="hob glass">
+                <HobbyIcon name={h.icon} color={h.color} />
+                <span className="text-lg font-medium">{h.title}</span>
+                <span className="text-[15px] leading-[1.55] text-[var(--muted)]">{h.text}</span>
+              </Reveal>
             ))}
           </div>
-        </motion.section>
+          <Reveal as="p" className="m-0 mono text-[13px] text-[var(--muted)]">{hobbiesAlso}</Reveal>
+        </section>
 
-        <motion.section id="contact" initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="mb-20">
-          <p className="text-xs tracking-widest uppercase mb-6 flex items-center gap-2 text-violet-500 dark:text-violet-400"><span className="w-8 h-px inline-block bg-violet-500/40 dark:bg-violet-400/40" />08 contact</p>
-          <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">lets talk</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-10 max-w-md leading-relaxed">a role, a collab, a show recommendation, or just talking data — reach out.</p>
-          <div className="flex flex-wrap gap-4">
-            {[
-              {label:"email",href:"mailto:sharmishthabhar@gmail.com",value:"sharmishthabhar@gmail.com"},
-              {label:"linkedin",href:"https://linkedin.com/in/sharmishtha-bharti-8ab54b209",value:"sharmishtha-bharti"},
-              {label:"github",href:"https://github.com/Sharmishtha-b",value:"Sharmishtha-b"},
-            ].map((link)=>(
-              <HoloCard key={link.label} className="px-5 py-4 bg-white dark:bg-white/[0.02]">
-                <a href={link.href} target="_blank" rel="noreferrer" className="block group">
-                  <div className="text-xs text-gray-400 group-hover:text-violet-500 transition-colors mb-0.5">{link.label}</div>
-                  <div className="font-medium text-gray-900 dark:text-white">{link.value}</div>
-                </a>
-              </HoloCard>
-            ))}
+        {/* contact */}
+        <section id="contact" className={wrap + " pt-[88px] pb-12 scroll-mt-24"}>
+          <Reveal className="contact-card rounded-[32px] px-6 sm:px-16 py-11 sm:py-[84px] flex flex-col gap-6">
+            <h2 className="m-0 font-semibold text-[clamp(48px,7vw,96px)] tracking-[-0.045em] leading-[0.95]">let’s <span className="holo">talk.</span></h2>
+            <p className="m-0 text-lg text-[var(--ink-2)] max-w-[520px]">a role, a collab, a show recommendation, or just talking data — reach out.</p>
+            <div className="flex gap-3 flex-wrap">
+              <a className="btn btn-light" href={`mailto:${links.email}`}>{links.email}</a>
+              <a className="btn glass" href={links.linkedin} target="_blank" rel="noreferrer">linkedin</a>
+              <a className="btn glass" href={links.github} target="_blank" rel="noreferrer">github</a>
+            </div>
+          </Reveal>
+          <div className="mono flex justify-between flex-wrap gap-3 pt-8 text-xs text-[var(--muted)]">
+            <span>designed and built by sharmishtha bharti · {new Date().getFullYear()}</span>
+            <span>⌘K for commands · double click for confetti · type “data” · click sb. five times</span>
           </div>
-        </motion.section>
-
-      </main>
-
-      <footer className="relative z-10 border-t border-gray-200 dark:border-white/5 py-8 text-center">
-        <p className="text-sm text-gray-400">designed and built by sharmishtha bharti {new Date().getFullYear()}</p>
-        <p className="text-xs text-gray-300 dark:text-gray-700 mt-2">⌘K for commands · double click for confetti · type "data" · click sb. five times</p>
-      </footer>
-    </div>
+        </section>
+      </div>
+    </MotionConfig>
   );
 }
