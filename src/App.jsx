@@ -229,7 +229,7 @@ export default function App() {
   const say = (msg) => {
     clearTimeout(toastTimer.current);
     setToast(msg);
-    toastTimer.current = setTimeout(() => setToast(null), 4200);
+    toastTimer.current = setTimeout(() => setToast(null), 6500);
   };
 
   // ⌘K, and typing "data"
@@ -289,9 +289,16 @@ export default function App() {
         <AnimatePresence>
           {showCmd && <CommandPalette onClose={() => setShowCmd(false)} />}
           {toast && (
-            <motion.div key="toast" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} role="status"
-              className="glass fixed bottom-8 left-1/2 -translate-x-1/2 z-[500] rounded-2xl px-6 py-4 text-sm text-center max-w-[90vw]">
-              {toast}
+            <motion.div key="toast" initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="fixed inset-x-0 bottom-6 z-[500] flex justify-center px-4 pointer-events-none">
+              <motion.div initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 24, scale: 0.96 }}
+                transition={{ duration: 0.35, ease: EASE }} role="status"
+                className="pointer-events-auto w-full max-w-[440px] rounded-2xl border border-[rgba(167,139,250,0.35)] bg-[#16132A] px-5 py-4 shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="mono text-[11px] tracking-[0.08em] text-[var(--lime)]">✦ easter egg</span>
+                  <button onClick={() => setToast(null)} aria-label="Close" className="text-[var(--muted)] hover:text-white text-lg leading-none px-1">×</button>
+                </div>
+                <p className="m-0 text-[15px] leading-relaxed text-[var(--ink)]">{toast}</p>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
