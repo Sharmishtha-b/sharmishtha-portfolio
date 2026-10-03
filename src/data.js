@@ -65,6 +65,7 @@ export const projects = [
 // 02 — SIDE QUESTS (small weekend builds). Each line in the terminal.
 // muted: true greys it out (handy for a "coming soon" line)
 export const sideQuests = [
+  { name: "sorted/", status: "▸ live · daily ranking puzzle", href: "https://sharmishtha-b.github.io/sorted/", muted: false },
   { name: "n8n-automation/", status: "▸ in progress", href: "#", muted: false },
   { name: "[next-weekend-build]/", status: "▸ soon", href: "#", muted: true },
 ];

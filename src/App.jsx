@@ -396,7 +396,7 @@ export default function App() {
           <Reveal delay={0.1} className="flex-[1.2] rounded-[20px] border border-white/[0.08] bg-[#0C0B12] px-[26px] py-[22px] mono text-sm leading-[2.1] text-[var(--ink-2)]">
             <div className="text-[var(--muted)]">~/sharmishtha $ ls side-quests</div>
             {sideQuests.map((q) => (
-              <a key={q.name} href={q.href || undefined} className="flex justify-between gap-4 hover:text-white" style={{ color: q.muted ? "#8C86A6" : "var(--ink)" }}>
+              <a key={q.name} href={q.href || undefined} target={q.href?.startsWith("http") ? "_blank" : undefined} rel={q.href?.startsWith("http") ? "noreferrer" : undefined} className="flex justify-between gap-4 hover:text-white" style={{ color: q.muted ? "#8C86A6" : "var(--ink)" }}>
                 <span>{q.name}  <span style={{ color: q.muted ? undefined : "var(--lime)" }}>{q.status}</span></span>
                 <span className="text-[var(--muted)]" aria-hidden="true">↗</span>
               </a>
